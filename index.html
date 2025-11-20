@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYSC Attendance</title>
+    <!-- Tailwind CSS for Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        /* Custom Glossy/Glassmorphism Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+            min-height: 100vh;
+            color: #1a202c;
+        }
+
+        /* The Glossy Card Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            border-radius: 20px;
+        }
+
+        .nysc-green-bg {
+            background-color: #006d3a;
+        }
+        
+        .nysc-green-text {
+            color: #006d3a;
+        }
+
+        .btn-glossy {
+            background: linear-gradient(145deg, #007a41, #006033);
+            box-shadow: 0 4px 15px rgba(0, 109, 58, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-glossy:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 109, 58, 0.2);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #006d3a;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Success Screen Background */
+        .success-bg {
+            background-color: #006d3a; /* Fallback Color */
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            color: white;
+            overflow: hidden;
+        }
+        
+        /* Overlay for readability over selfie */
+        .success-overlay {
+            background: rgba(0, 0, 0, 0.7); /* Dark overlay */
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+
+        .success-content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Hidden helper class */
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div id="main-card" class="glass-panel w-full max-w-md p-6 relative overflow-hidden transition-all duration-500 min-h-[500px] flex flex-col justify-center">
+        
+        <!-- Header (Hidden on Success) -->
+        <div id="app-header" class="text-center mb-6">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
+                <!-- NYSC Logo Placeholder / Icon -->
+                <i class="fa-solid fa-leaf text-3xl nysc-green-text"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">NYSC Attendance</h1>
+            <p class="text-sm text-gray-500">General CDS & Clearance</p>
+        </div>
+
+        <!-- 0. Loading State (For checking existing attendance) -->
+        <div id="step-loading" class="hidden text-center py-10">
+            <div class="loader mb-4"></div>
+            <p class="text-gray-600">Checking existing records...</p>
+        </div>
+
+        <!-- 1. Welcome Screen -->
+        <div id="step-welcome" class="text-center space-y-6">
+            <p class="text-gray-600">Please ensure you are at the venue before recording your attendance.</p>
+            <div id="token-warning" class="hidden bg-red-100 text-red-700 p-3 rounded-lg text-xs">
+                Error: No security token found in URL. **Attendance will not be recorded.**
+            </div>
+            <button id="btn-start" class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide">
+                Record Attendance
+            </button>
+        </div>
+
+        <!-- 2. Camera / Selfie Screen -->
+        <div id="step-camera" class="hidden flex-col items-center space-y-4 relative">
+            
+            <!-- Confirmation Overlay -->
+            <div id="camera-confirmation" class="absolute inset-0 z-20 bg-white/95 flex flex-col items-center justify-center p-6 text-center rounded-xl">
+                 <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-camera text-2xl nysc-green-text"></i>
+                 </div>
+                 <h3 class="font-bold text-gray-800 text-lg mb-2">Verification</h3>
+                 <p class="text-gray-600 mb-6 text-sm">Your selfie is about to be taken for verification purposes.</p>
+                 <button id="btn-confirm-selfie" class="btn-glossy text-white w-full py-3 rounded-xl font-semibold transition transform active:scale-95">
+                    Okay
+                 </button>
+            </div>
+
+            <h3 class="font-semibold text-gray-700">Verification</h3>
+            <p class="text-xs text-gray-500 text-center">Look at the camera. Photo in <span id="countdown" class="font-bold text-xl nysc-green-text">5</span>s</p>
+            
+            <div class="relative w-full h-64 bg-black rounded-xl overflow-hidden shadow-inner">
+                <video id="video-feed" class="w-full h-full object-cover" autoplay playsinline muted></video>
+                <canvas id="photo-canvas" class="hidden"></canvas>
+            </div>
+            
+            <div class="text-xs text-gray-400 italic">
+                <i class="fa-solid fa-lock"></i> Taking secure selfie...
+            </div>
+        </div>
+
+        <!-- 3. Location Loader -->
+        <div id="step-location" class="hidden text-center space-y-4 py-10">
+            <div class="loader"></div>
+            <p class="text-gray-600 font-medium">Acquiring GPS Coordinates...</p>
+            <p class="text-xs text-gray-400">Please allow location access</p>
+        </div>
+
+        <!-- 4. Data Form -->
+        <form id="attendance-form" class="hidden space-y-4">
+            <div class="text-center mb-2">
+                <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+                    <i class="fa-solid fa-check"></i> Verification Complete
+                </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">First Name</label>
+                    <input type="text" id="firstName" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Last Name</label>
+                    <input type="text" id="lastName" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Middle Name <span class="font-normal text-gray-400">(Optional)</span></label>
+                <input type="text" id="middleName" class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">Phone Number</label>
+                <input type="tel" id="phoneNumber" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-gray-500 mb-1">State Code</label>
+                <input type="text" id="stateCode" placeholder="e.g. LA/23B/1234" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm uppercase">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">CDS Group</label>
+                    <div class="relative">
+                        <select id="cds" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm appearance-none">
+                            <option value="" disabled selected>Select</option>
+                            <!-- CDS Enum Values (1 to 11) -->
+                            <option value="1">Special CDS</option>
+                            <option value="2">Editorial & Publicity</option>
+                            <option value="3">Environmental</option>
+                            <option value="4">Charity & Welfare</option>
+                            <option value="5">Education Dev.</option>
+                            <option value="6">Culture & Tourism</option>
+                            <option value="7">ICT & Digital</option>
+                            <option value="8">Community Dev.</option>
+                            <option value="9">Agro-Allied</option>
+                            <option value="10">Reproductive Health</option>
+                            <option value="11">Others</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 mb-1">Batch</label>
+                    <div class="relative">
+                        <select id="batch" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm appearance-none">
+                            <option value="" disabled selected>Select</option>
+                            <!-- Batch Enum Values (0 to 6) -->
+                            <option value="0">Not Given</option>
+                            <option value="1">Batch A Stream 1</option>
+                            <option value="2">Batch A Stream 2</option>
+                            <option value="3">Batch B Stream 1</option>
+                            <option value="4">Batch B Stream 2</option>
+                            <option value="5">Batch C Stream 1</option>
+                            <option value="6">Batch C Stream 2</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="btn-submit" class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide mt-4">
+                Submit Attendance
+            </button>
+        </form>
+
+        <!-- 5. Success Screen (Updated with Selfie Background) -->
+        <div id="step-success" class="hidden absolute inset-0 rounded-2xl success-bg flex flex-col items-center justify-center text-center p-6 z-50">
+            <div class="success-overlay"></div>
+            <div class="success-content">
+                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/50">
+                    <i class="fa-solid fa-check text-4xl text-white"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-white drop-shadow-lg">Attendance Saved!</h2>
+                <p class="text-white/80 mt-2 font-medium">Your Serial Number is:</p>
+                <div id="serial-display" class="text-6xl font-bold text-white mt-6 tracking-widest drop-shadow-xl" style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                    <!-- Serial Number Injected Here -->
+                </div>
+                <button onclick="resetDemo()" class="mt-12 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-sm text-white border border-white/40 transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permission/Error Modal -->
+    <div id="permission-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i id="modal-icon" class="fa-solid fa-video-slash text-red-500"></i>
+            </div>
+            <h3 id="modal-title" class="text-lg font-bold text-gray-800 mb-2">Permission Denied</h3>
+            <p id="modal-message" class="text-sm text-gray-600 mb-4">
+                We cannot record your attendance without Camera and Location access.
+            </p>
+            <div id="modal-instructions" class="text-left bg-gray-50 p-3 rounded-lg text-xs text-gray-500 mb-4 space-y-2">
+                <p><strong>How to fix:</strong></p>
+                <p>1. Tap the lock icon <i class="fa-solid fa-lock"></i> in your browser URL bar.</p>
+                <p>2. Click "Permissions" or "Site Settings".</p>
+                <p>3. Set Camera and Location to "Allow".</p>
+                <p>4. Refresh this page.</p>
+            </div>
+            <button onclick="location.reload()" class="w-full bg-gray-800 text-white py-3 rounded-xl font-medium hover:bg-gray-700 transition">
+                Reload Page
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Configuration ---
+        //const BASE_URL = "http://nyscattendance.somee.com"; // Base URL from document
+         const BASE_URL = "https://109f7d5308e6.ngrok-free.app "; // test URL
+        // --- Variables & Elements ---
+        const token = new URLSearchParams(window.location.search).get('token');
+        
+        let userLatitude = 0;
+        let userLongitude = 0;
+
+        // DOM Elements
+        const mainCard = document.getElementById('main-card');
+        const appHeader = document.getElementById('app-header');
+        const stepWelcome = document.getElementById('step-welcome');
+        const stepLoading = document.getElementById('step-loading');
+        const stepCamera = document.getElementById('step-camera');
+        const cameraConfirmation = document.getElementById('camera-confirmation');
+        const btnConfirmSelfie = document.getElementById('btn-confirm-selfie');
+        const stepLocation = document.getElementById('step-location');
+        const stepForm = document.getElementById('attendance-form');
+        const stepSuccess = document.getElementById('step-success');
+        const permissionModal = document.getElementById('permission-modal');
+        const btnStart = document.getElementById('btn-start');
+        const videoFeed = document.getElementById('video-feed');
+        const canvas = document.getElementById('photo-canvas');
+        const countdownEl = document.getElementById('countdown');
+        
+        // --- Safe UUID Generator (Used for the 'identifier') ---
+        function generateUUID() {
+            // Using crypto.randomUUID for modern browsers, fallback to older safe method
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // --- Initialization ---
+        
+        // 1. Check for Token (API token is required for the POST request)
+        if (!token) {
+            document.getElementById('token-warning').classList.remove('hidden');
+            // If no token, we can still proceed to show the form, but submission will likely fail unless the token route is optional on backend.
+            // We alert the user that attendance won't be recorded officially.
+        }
+
+        // 2. Check for Existing Identifier
+        checkExistingAttendance();
+
+        /**
+         * Checks if the user has a previous attendance record identifier saved locally.
+         * If found, it attempts to retrieve the serial number using the API.
+         */
+        async function checkExistingAttendance() {
+            const storedIdentifier = localStorage.getItem('attendance_identifier');
+            
+            if (storedIdentifier) {
+                console.log("Found existing identifier (GUID):", storedIdentifier);
+                stepWelcome.classList.add('hidden');
+                stepLoading.classList.remove('hidden');
+
+                const apiUrl = `${BASE_URL}/api/CorpsMember/Attendance/${storedIdentifier}`;
+
+                try {
+                    // Actual API Call: [GET] /api/CorpsMember/Attendance/{identifier}
+                    const response = await fetch(apiUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    // Check API's internal status
+                    if (result.status && typeof result.value === 'number') {
+                        stepLoading.classList.add('hidden');
+                        showSuccess(result.value);
+                        return; // Stop flow, attendance already recorded
+                    } else {
+                        console.warn("API response status false or value missing:", result.message);
+                        // Fall through to show the welcome screen if API says record doesn't exist or failed to retrieve
+                    }
+                } catch (e) {
+                    console.error("Error fetching existing record from API:", e);
+                    showErrorModal("Network Error", "Could not check attendance status. Please check your internet connection.", false);
+                    // Do not hide loading screen, keep user informed of the failure.
+                    return;
+                }
+                
+                // If API call fails or status is false, proceed to allow new attendance record
+                stepLoading.classList.add('hidden');
+                stepWelcome.classList.remove('hidden');
+            }
+        }
+
+
+        // --- Event Listeners ---
+        btnStart.addEventListener('click', startFlow);
+        document.getElementById('attendance-form').addEventListener('submit', submitForm);
+        
+        // Handle Confirmation Button Click
+        btnConfirmSelfie.addEventListener('click', () => {
+            cameraConfirmation.classList.add('hidden');
+            startCountdown();
+        });
+
+        // --- Utility Functions ---
+
+        /**
+         * Shows the custom error modal with specific message and title.
+         * @param {string} title - The title of the modal.
+         * @param {string} message - The main message of the modal.
+         * @param {boolean} isPermission - If true, shows permission recovery steps.
+         */
+        function showErrorModal(title, message, isPermission = true) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            
+            if (isPermission) {
+                document.getElementById('modal-icon').className = 'fa-solid fa-video-slash text-red-500';
+                document.getElementById('modal-instructions').classList.remove('hidden');
+            } else {
+                 document.getElementById('modal-icon').className = 'fa-solid fa-wifi-slash text-red-500';
+                 document.getElementById('modal-instructions').classList.add('hidden');
+            }
+            permissionModal.classList.remove('hidden');
+        }
+
+        // --- Flow Control ---
+
+        function startFlow() {
+            requestCamera();
+        }
+
+        // --- Camera Logic ---
+        async function requestCamera() {
+            try {
+                // Request camera permission for user-facing camera
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                
+                stepWelcome.classList.add('hidden');
+                stepCamera.classList.remove('hidden');
+                stepCamera.classList.add('flex');
+                
+                // Show confirmation before starting the countdown
+                cameraConfirmation.classList.remove('hidden');
+
+                videoFeed.srcObject = stream;
+            } catch (err) {
+                console.error("Camera denied:", err);
+                showErrorModal("Camera Permission Denied", "We cannot record your attendance without Camera access. Please enable it in your browser settings.", true);
+            }
+        }
+
+        function startCountdown() {
+            let timeLeft = 5;
+            const timer = setInterval(() => {
+                timeLeft--;
+                countdownEl.innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    takeSelfie();
+                }
+            }, 1000);
+        }
+
+        function takeSelfie() {
+            // COMPRESSION LOGIC: Reduce size for localStorage compatibility
+            const targetWidth = 640; // Safe width
+            const aspectRatio = videoFeed.videoHeight / videoFeed.videoWidth;
+            const targetHeight = targetWidth * aspectRatio;
+
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            
+            // Draw resized image
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to base64 (medium quality JPEG)
+            const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+            
+            try {
+                localStorage.setItem('nysc_selfie', dataURL);
+                console.log("Selfie saved successfully to local storage.");
+            } catch(e) {
+                console.warn("Local storage full, selfie NOT saved.", e);
+            }
+
+            // Stop video stream
+            const tracks = videoFeed.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+
+            stepCamera.classList.remove('flex');
+            stepCamera.classList.add('hidden');
+            stepLocation.classList.remove('hidden');
+            
+            requestLocation();
+        }
+
+        // --- Location Logic ---
+        function requestLocation() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLatitude = position.coords.latitude;
+                        userLongitude = position.coords.longitude;
+                        stepLocation.classList.add('hidden');
+                        stepForm.classList.remove('hidden');
+                    },
+                    (error) => {
+                        console.error("Location denied:", error);
+                        // 1: Permission denied, 2: Position unavailable, 3: Timeout
+                        let msg = "Location access was denied or failed. Please check your browser settings.";
+                        if (error.code === 3) {
+                            msg = "Location request timed out. Please ensure your GPS is active.";
+                        }
+                        showErrorModal("Location Error", msg, true);
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
+            } else {
+                showErrorModal("Geolocation Not Supported", "Geolocation is not supported by this browser.", false);
+            }
+        }
+
+        // --- Form Submission Logic ---
+        async function submitForm(e) {
+            e.preventDefault();
+            
+            if (!token) {
+                 showErrorModal("Missing Token", "The security token is missing from the URL. Attendance cannot be submitted officially.", false);
+                 return;
+            }
+
+            const btnSubmit = document.getElementById('btn-submit');
+            const originalText = btnSubmit.innerText;
+            btnSubmit.innerText = "Submitting...";
+            btnSubmit.disabled = true;
+            btnSubmit.classList.add('opacity-70');
+
+            // Generate UUID for this attendance attempt
+            const generatedIdentifier = generateUUID();
+
+            const formData = {
+                // API Request Body Structure:
+                identifier: generatedIdentifier, 
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                middleName: document.getElementById('middleName').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                stateCode: document.getElementById('stateCode').value,
+                cds: parseInt(document.getElementById('cds').value), // Already an integer from the select
+                batch: parseInt(document.getElementById('batch').value), // Already an integer from the select
+                longitude: userLongitude,
+                latitude: userLatitude
+            };
+
+            const apiUrl = `${BASE_URL}/api/CorpsMember/Attendance/${token}`;
+
+            try {
+                // Actual API Call: [POST] /api/CorpsMember/Attendance/{token}
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+
+                // Check API's internal status
+                if (result.status && typeof result.value === 'number') {
+                    // Success: Save identifier and show serial number
+                    localStorage.setItem('attendance_identifier', generatedIdentifier);
+                    showSuccess(result.value);
+                } else {
+                    // API returned status: false
+                    console.error("API Submission Error:", result.message);
+                    showErrorModal("Submission Failed", result.message || "An unknown error occurred during submission.", false);
+                }
+
+                // Commented out Simulation:
+                /* console.log("Sending POST to: " + apiUrl);
+                await new Promise(r => setTimeout(r, 1500));
+                
+                localStorage.setItem('attendance_identifier', generatedIdentifier);
+                showSuccess(Math.floor(Math.random() * 500) + 1); 
+                */
+
+            } catch (error) {
+                console.error("Network or API Error:", error);
+                showErrorModal("Network Error", "Could not reach the server. Please check your internet connection.", false);
+            } finally {
+                // Reset button state regardless of outcome
+                btnSubmit.innerText = originalText;
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('opacity-70');
+            }
+        }
+
+        // --- Success Screen Logic ---
+
+        function showSuccess(serialNumber) {
+            // Hide previous UI elements
+            appHeader.classList.add('hidden');
+            stepForm.classList.add('hidden');
+            stepSuccess.classList.remove('hidden');
+            
+            // Force layout refresh to ensure absolute positioning works
+            mainCard.classList.remove('overflow-hidden'); // Ensure no clipping
+
+            // Render Serial Number
+            const displayEl = document.getElementById('serial-display');
+            if(displayEl) {
+                 // Format serial number to 3 digits (e.g., 001, 123)
+                 displayEl.innerText = String(serialNumber).padStart(3, '0');
+            }
+
+            // Render Background
+            const savedSelfie = localStorage.getItem('nysc_selfie');
+            if (savedSelfie) {
+                stepSuccess.style.backgroundImage = `url('${savedSelfie}')`;
+            } else {
+                // Fallback if image is missing
+                stepSuccess.style.backgroundImage = 'none';
+                stepSuccess.style.backgroundColor = '#006d3a'; 
+            }
+        }
+
+        function resetDemo() {
+            localStorage.removeItem('attendance_identifier');
+            localStorage.removeItem('nysc_selfie');
+            location.reload();
+        }
+
+    </script>
+</body>
+</html>
