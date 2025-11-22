@@ -291,8 +291,8 @@
     <!-- JavaScript Logic -->
     <script>
         // --- Configuration ---
-        //const BASE_URL = "http://nyscattendance.somee.com"; // Base URL from document
-         const BASE_URL = "https://e7c647dae63b.ngrok-free.app"; // test URL
+        const BASE_URL = "http://nyscattendance.somee.com"; // Base URL from document
+
         // --- Variables & Elements ---
         const token = new URLSearchParams(window.location.search).get('token');
         
@@ -555,7 +555,7 @@
             try {
                 // Actual API Call: [POST] /api/CorpsMember/Attendance/{token}
                 const response = await fetch(apiUrl, {
-                    method: 'POST',
+                    method: 'POST', // Confirmed: Method is explicitly POST
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
