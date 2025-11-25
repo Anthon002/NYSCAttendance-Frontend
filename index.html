@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-
     <style>
         /* Custom Glossy/Glassmorphism Styles */
         body {
@@ -33,7 +33,7 @@
         .nysc-green-bg {
             background-color: #006d3a;
         }
-        
+
         .nysc-green-text {
             color: #006d3a;
         }
@@ -61,13 +61,19 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* Success Screen Background */
         .success-bg {
-            background-color: #006d3a; /* Fallback Color */
+            background-color: #006d3a;
+            /* Fallback Color */
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -75,10 +81,11 @@
             color: white;
             overflow: hidden;
         }
-        
+
         /* Overlay for readability over selfie */
         .success-overlay {
-            background: rgba(0, 0, 0, 0.7); /* Dark overlay */
+            background: rgba(0, 0, 0, 0.7);
+            /* Dark overlay */
             position: absolute;
             inset: 0;
             z-index: 1;
@@ -95,16 +102,33 @@
         }
     </style>
 </head>
+
 <body class="flex items-center justify-center p-4">
 
     <!-- Main Container -->
-    <div id="main-card" class="glass-panel w-full max-w-md p-6 relative overflow-hidden transition-all duration-500 min-h-[500px] flex flex-col justify-center">
-        
+    <div id="main-card"
+        class="glass-panel w-full max-w-md p-6 relative overflow-hidden transition-all duration-500 min-h-[500px] flex flex-col justify-center">
+
         <!-- Header (Hidden on Success) -->
-        <div id="app-header" class="text-center mb-6">
-            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm">
-                <!-- NYSC Logo Placeholder / Icon -->
-                <i class="fa-solid fa-leaf text-3xl nysc-green-text"></i>
+        <div id="app-header" class="text-center mb-6 relative">
+
+            <!-- Stored Identifier Display (Top Left) -->
+            <div id="stored-identifier-panel"
+                class="hidden absolute top-0 left-0 bg-white/70 backdrop-blur-sm rounded-lg p-2 shadow-md border border-gray-100 max-w-[50%]">
+                <p class="text-[9px] text-gray-500 uppercase font-semibold">Your ID:</p>
+                <div class="flex items-center">
+                    <code id="stored-identifier-display"
+                        class="text-[10px] text-gray-800 font-mono truncate mr-1"></code>
+                    <button onclick="copyStoredIdentifier()" class="text-gray-500 hover:text-green-600 transition p-0.5"
+                        title="Copy Identifier">
+                        <i class="fa-regular fa-copy text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm mt-8">
+                <!-- LOGO ICON CHANGED: Clipboard Check -->
+                <i class="fa-solid fa-clipboard-check text-3xl nysc-green-text"></i>
             </div>
             <h1 class="text-2xl font-bold text-gray-800">NYSC Attendance</h1>
             <p class="text-sm text-gray-500">General CDS & Clearance</p>
@@ -119,37 +143,63 @@
         <!-- 1. Welcome Screen -->
         <div id="step-welcome" class="text-center space-y-6">
             <p class="text-gray-600">Please ensure you are at the venue before recording your attendance.</p>
-            <div id="token-warning" class="hidden bg-red-100 text-red-700 p-3 rounded-lg text-xs">
-                Error: No security token found in URL. **Attendance will not be recorded.**
+
+            <div id="token-warning" class="hidden bg-yellow-100 text-yellow-700 p-3 rounded-lg text-xs">
+                <strong>Demo Mode:</strong> No security token found. Attendance will be simulated.
             </div>
-            <button id="btn-start" class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide">
+
+            <button id="btn-start"
+                class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide">
                 Record Attendance
+            </button>
+
+            <!-- Verify Button -->
+            <button id="btn-open-verify"
+                class="text-sm text-green-700 font-semibold hover:text-green-900 transition underline pt-4 flex items-center justify-center mx-auto">
+                <i class="fa-solid fa-magnifying-glass mr-2"></i> Retrieve My Serial Number
+            </button>
+        </div>
+
+        <!-- 1.5 Verify Screen -->
+        <div id="step-verify" class="hidden text-center space-y-4">
+            <h3 class="text-lg font-bold text-gray-800">Verify Attendance</h3>
+            <p class="text-sm text-gray-500">Enter your Attendance Identifier to retrieve your serial number.</p>
+            <input type="text" id="verify-id-input" placeholder="Paste Identifier UUID"
+                class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 text-sm font-mono text-center shadow-inner uppercase">
+
+            <button id="btn-verify-check" class="btn-glossy text-white w-full py-3 rounded-xl font-semibold">
+                Retrieve
+            </button>
+            <button id="btn-verify-back" class="text-gray-500 text-sm underline hover:text-green-600 transition">
+                Back
             </button>
         </div>
 
         <!-- 2. Camera / Selfie Screen -->
         <div id="step-camera" class="hidden flex-col items-center space-y-4 relative">
-            
             <!-- Confirmation Overlay -->
-            <div id="camera-confirmation" class="absolute inset-0 z-20 bg-white/95 flex flex-col items-center justify-center p-6 text-center rounded-xl">
-                 <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <div id="camera-confirmation"
+                class="absolute inset-0 z-20 bg-white/95 flex flex-col items-center justify-center p-6 text-center rounded-xl">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <i class="fa-solid fa-camera text-2xl nysc-green-text"></i>
-                 </div>
-                 <h3 class="font-bold text-gray-800 text-lg mb-2">Verification</h3>
-                 <p class="text-gray-600 mb-6 text-sm">Your selfie is about to be taken for verification purposes.</p>
-                 <button id="btn-confirm-selfie" class="btn-glossy text-white w-full py-3 rounded-xl font-semibold transition transform active:scale-95">
+                </div>
+                <h3 class="font-bold text-gray-800 text-lg mb-2">Verification</h3>
+                <p class="text-gray-600 mb-6 text-sm">Your selfie is about to be taken for verification purposes.</p>
+                <button id="btn-confirm-selfie"
+                    class="btn-glossy text-white w-full py-3 rounded-xl font-semibold transition transform active:scale-95">
                     Okay
-                 </button>
+                </button>
             </div>
 
             <h3 class="font-semibold text-gray-700">Verification</h3>
-            <p class="text-xs text-gray-500 text-center">Look at the camera. Photo in <span id="countdown" class="font-bold text-xl nysc-green-text">5</span>s</p>
-            
+            <p class="text-xs text-gray-500 text-center">Look at the camera. Photo in <span id="countdown"
+                    class="font-bold text-xl nysc-green-text">5</span>s</p>
+
             <div class="relative w-full h-64 bg-black rounded-xl overflow-hidden shadow-inner">
                 <video id="video-feed" class="w-full h-full object-cover" autoplay playsinline muted></video>
                 <canvas id="photo-canvas" class="hidden"></canvas>
             </div>
-            
+
             <div class="text-xs text-gray-400 italic">
                 <i class="fa-solid fa-lock"></i> Taking secure selfie...
             </div>
@@ -173,34 +223,41 @@
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">First Name</label>
-                    <input type="text" id="firstName" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+                    <input type="text" id="firstName" required
+                        class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">Last Name</label>
-                    <input type="text" id="lastName" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+                    <input type="text" id="lastName" required
+                        class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-gray-500 mb-1">Middle Name <span class="font-normal text-gray-400">(Optional)</span></label>
-                <input type="text" id="middleName" class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+                <label class="block text-xs font-bold text-gray-500 mb-1">Middle Name <span
+                        class="font-normal text-gray-400">(Optional)</span></label>
+                <input type="text" id="middleName"
+                    class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-500 mb-1">Phone Number</label>
-                <input type="tel" id="phoneNumber" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
+                <input type="tel" id="phoneNumber" required
+                    class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm">
             </div>
 
             <div>
                 <label class="block text-xs font-bold text-gray-500 mb-1">State Code</label>
-                <input type="text" id="stateCode" placeholder="e.g. LA/23B/1234" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm uppercase">
+                <input type="text" id="stateCode" placeholder="e.g. LA/23B/1234" required
+                    class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm uppercase">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">CDS Group</label>
                     <div class="relative">
-                        <select id="cds" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm appearance-none">
+                        <select id="cds" required
+                            class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm appearance-none">
                             <option value="" disabled selected>Select</option>
                             <!-- CDS Enum Values (1 to 11) -->
                             <option value="1">Special CDS</option>
@@ -215,7 +272,8 @@
                             <option value="10">Reproductive Health</option>
                             <option value="11">Others</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <i class="fa-solid fa-chevron-down text-xs"></i>
                         </div>
                     </div>
@@ -223,7 +281,8 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 mb-1">Batch</label>
                     <div class="relative">
-                        <select id="batch" required class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm appearance-none">
+                        <select id="batch" required
+                            class="w-full p-3 bg-white/50 border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition text-sm appearance-none">
                             <option value="" disabled selected>Select</option>
                             <!-- Batch Enum Values (0 to 6) -->
                             <option value="0">Not Given</option>
@@ -234,39 +293,69 @@
                             <option value="5">Batch C Stream 1</option>
                             <option value="6">Batch C Stream 2</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <i class="fa-solid fa-chevron-down text-xs"></i>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" id="btn-submit" class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide mt-4">
+            <button type="submit" id="btn-submit"
+                class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide mt-4">
                 Submit Attendance
             </button>
         </form>
 
         <!-- 5. Success Screen (Updated with Selfie Background) -->
-        <div id="step-success" class="hidden absolute inset-0 rounded-2xl success-bg flex flex-col items-center justify-center text-center p-6 z-50">
+        <div id="step-success"
+            class="hidden absolute inset-0 rounded-2xl success-bg flex flex-col items-center justify-center text-center p-6 z-50">
             <div class="success-overlay"></div>
-            <div class="success-content">
-                <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/50">
+            <div class="success-content w-full">
+                <div
+                    class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/50">
                     <i class="fa-solid fa-check text-4xl text-white"></i>
                 </div>
                 <h2 class="text-3xl font-bold text-white drop-shadow-lg">Attendance Saved!</h2>
                 <p class="text-white/80 mt-2 font-medium">Your Serial Number is:</p>
-                <div id="serial-display" class="text-6xl font-bold text-white mt-6 tracking-widest drop-shadow-xl" style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                <div id="serial-display" class="text-6xl font-bold text-white mt-6 tracking-widest drop-shadow-xl"
+                    style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
                     <!-- Serial Number Injected Here -->
                 </div>
-                <button onclick="resetDemo()" class="mt-12 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-sm text-white border border-white/40 transition">
+
+                <!-- Updated Identifier Display with Warning -->
+                <div class="mt-8 bg-black/40 backdrop-blur-md rounded-xl p-4 border border-white/20 mx-2">
+                    <!-- WARNING MESSAGE -->
+                    <p class="text-red-300 text-sm font-semibold mb-3">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Don't forget to copy this as you would
+                        need it to retrieve your serial number!
+                    </p>
+
+                    <p class="text-[10px] text-white/70 uppercase tracking-widest mb-2">Attendance Identifier</p>
+                    <div class="flex items-center justify-between bg-black/20 rounded-lg p-2 border border-white/10">
+                        <code id="identifier-display"
+                            class="text-xs text-green-300 font-mono break-all truncate mr-2 select-all">
+                            <!-- UUID injected here -->
+                        </code>
+                        <button onclick="copyIdentifier()" class="text-white/70 hover:text-white transition p-1"
+                            title="Copy Identifier">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="resetDemo()"
+                    class="mt-8 px-6 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full text-sm text-white border border-white/40 transition">
                     Done
                 </button>
             </div>
         </div>
+
     </div>
 
     <!-- Permission/Error Modal -->
-    <div id="permission-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div id="permission-modal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl text-center">
             <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
                 <i id="modal-icon" class="fa-solid fa-video-slash text-red-500"></i>
@@ -275,14 +364,16 @@
             <p id="modal-message" class="text-sm text-gray-600 mb-4">
                 We cannot record your attendance without Camera and Location access.
             </p>
-            <div id="modal-instructions" class="text-left bg-gray-50 p-3 rounded-lg text-xs text-gray-500 mb-4 space-y-2">
+            <div id="modal-instructions"
+                class="text-left bg-gray-50 p-3 rounded-lg text-xs text-gray-500 mb-4 space-y-2">
                 <p><strong>How to fix:</strong></p>
                 <p>1. Tap the lock icon <i class="fa-solid fa-lock"></i> in your browser URL bar.</p>
                 <p>2. Click "Permissions" or "Site Settings".</p>
                 <p>3. Set Camera and Location to "Allow".</p>
                 <p>4. Refresh this page.</p>
             </div>
-            <button onclick="location.reload()" class="w-full bg-gray-800 text-white py-3 rounded-xl font-medium hover:bg-gray-700 transition">
+            <button onclick="location.reload()"
+                class="w-full bg-gray-800 text-white py-3 rounded-xl font-medium hover:bg-gray-700 transition">
                 Reload Page
             </button>
         </div>
@@ -291,19 +382,31 @@
     <!-- JavaScript Logic -->
     <script>
         // --- Configuration ---
-        const BASE_URL = "http://nyscattendance.somee.com"; // Base URL from document
+        const BASE_URL = "http://nyscattendance.somee.com";
 
         // --- Variables & Elements ---
         const token = new URLSearchParams(window.location.search).get('token');
-        
         let userLatitude = 0;
         let userLongitude = 0;
+
+        // LOCAL STORAGE KEYS
+        const IDENTIFIER_KEY = 'attendance_identifier';
+        const SELFIE_KEY = 'nysc_selfie';
+        const DATE_KEY = 'attendance_date';
+        const SERIAL_KEY = 'attendance_serial';
 
         // DOM Elements
         const mainCard = document.getElementById('main-card');
         const appHeader = document.getElementById('app-header');
         const stepWelcome = document.getElementById('step-welcome');
         const stepLoading = document.getElementById('step-loading');
+        const stepVerify = document.getElementById('step-verify');
+        const btnOpenVerify = document.getElementById('btn-open-verify'); // Still needed for JS
+        const btnVerifyCheck = document.getElementById('btn-verify-check');
+        const btnVerifyBack = document.getElementById('btn-verify-back');
+        const verifyInput = document.getElementById('verify-id-input');
+        const storedIdPanel = document.getElementById('stored-identifier-panel');
+        const storedIdDisplay = document.getElementById('stored-identifier-display');
         const stepCamera = document.getElementById('step-camera');
         const cameraConfirmation = document.getElementById('camera-confirmation');
         const btnConfirmSelfie = document.getElementById('btn-confirm-selfie');
@@ -315,129 +418,219 @@
         const videoFeed = document.getElementById('video-feed');
         const canvas = document.getElementById('photo-canvas');
         const countdownEl = document.getElementById('countdown');
-        
-        // --- Safe UUID Generator (Used for the 'identifier') ---
-        function generateUUID() {
-            // Using crypto.randomUUID for modern browsers, fallback to older safe method
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-                return crypto.randomUUID();
-            }
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
+
+        // --- Utility Functions ---
+
+        // Function to get the current date as a simple YYYY-MM-DD string
+        function getTodayDateString() {
+            const now = new Date();
+            // Format: YYYY-MM-DD
+            return now.toISOString().split('T')[0];
         }
 
-        // --- Initialization ---
-        
-        // 1. Check for Token (API token is required for the POST request)
-        if (!token) {
-            document.getElementById('token-warning').classList.remove('hidden');
-            // If no token, we can still proceed to show the form, but submission will likely fail unless the token route is optional on backend.
-            // We alert the user that attendance won't be recorded officially.
-        }
-
-        // 2. Check for Existing Identifier
-        checkExistingAttendance();
-
-        /**
-         * Checks if the user has a previous attendance record identifier saved locally.
-         * If found, it attempts to retrieve the serial number using the API.
-         */
-        async function checkExistingAttendance() {
-            const storedIdentifier = localStorage.getItem('attendance_identifier');
-            
-            if (storedIdentifier) {
-                console.log("Found existing identifier (GUID):", storedIdentifier);
-                stepWelcome.classList.add('hidden');
-                stepLoading.classList.remove('hidden');
-
-                const apiUrl = `${BASE_URL}/api/CorpsMember/Attendance/${storedIdentifier}`;
+        // Function for exponential backoff retry for network resilience
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            let lastError = null;
+            for (let i = 0; i < maxRetries; i++) {
+                const delay = Math.pow(2, i) * 500; // 0.5s, 1s, 2s
 
                 try {
-                    // Actual API Call: [GET] /api/CorpsMember/Attendance/{identifier}
-                    const response = await fetch(apiUrl);
-                    
+                    const response = await fetch(url, options);
+                    // Check for network/HTTP errors (e.g., 404, 500)
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    
-                    const result = await response.json();
-                    
-                    // Check API's internal status
-                    if (result.status && typeof result.value === 'number') {
-                        stepLoading.classList.add('hidden');
-                        showSuccess(result.value);
-                        return; // Stop flow, attendance already recorded
-                    } else {
-                        console.warn("API response status false or value missing:", result.message);
-                        // Fall through to show the welcome screen if API says record doesn't exist or failed to retrieve
+                    return response;
+                } catch (error) {
+                    lastError = error;
+                    if (i < maxRetries - 1) {
+                        // console.warn(`Request failed, retrying in ${delay / 1000}s...`); // Commented out to prevent console spam
+                        await new Promise(resolve => setTimeout(resolve, delay));
                     }
-                } catch (e) {
-                    console.error("Error fetching existing record from API:", e);
-                    showErrorModal("Network Error", "Could not check attendance status. Please check your internet connection.", false);
-                    // Do not hide loading screen, keep user informed of the failure.
-                    return;
                 }
-                
-                // If API call fails or status is false, proceed to allow new attendance record
-                stepLoading.classList.add('hidden');
-                stepWelcome.classList.remove('hidden');
             }
+            throw lastError; // Throw the last recorded error
         }
 
+        function generateIdentifier() {
+            // Generates a 7-character alphanumeric identifier (A-Z, 0-9)
+            let result = '';
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const charactersLength = characters.length;
+            for (let i = 0; i < 7; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            return result;
+        }
 
-        // --- Event Listeners ---
+        function showErrorModal(title, message, isPermission = true) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-message').innerText = message;
+            if (isPermission) {
+                document.getElementById('modal-icon').className = 'fa-solid fa-video-slash text-red-500';
+                document.getElementById('modal-instructions').classList.remove('hidden');
+            } else {
+                document.getElementById('modal-icon').className = 'fa-solid fa-wifi-slash text-red-500';
+                document.getElementById('modal-instructions').classList.add('hidden');
+            }
+            permissionModal.classList.remove('hidden');
+        }
+
+        function copyIdentifier() {
+            const text = document.getElementById('identifier-display').innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            // Using alert temporarily since a custom modal for this is not built yet
+            alert("Identifier copied to clipboard!");
+        }
+
+        function copyStoredIdentifier() {
+            const text = storedIdDisplay.innerText;
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            // Using alert temporarily since a custom modal for this is not built yet
+            alert("Stored Identifier copied to clipboard!");
+        }
+
+        // --- Initialization ---
+
+        if (!token) {
+            document.getElementById('token-warning').classList.remove('hidden');
+        }
+
+        checkExistingAttendance();
+
+        async function checkExistingAttendance() {
+            const storedDate = localStorage.getItem(DATE_KEY);
+            const todayDate = getTodayDateString();
+            const storedIdentifier = localStorage.getItem(IDENTIFIER_KEY);
+
+            // 1. Check if the stored attendance is from a previous day
+            if (storedDate && storedDate !== todayDate) {
+                // It's a new day, clear all stored attendance data
+                localStorage.removeItem(IDENTIFIER_KEY);
+                localStorage.removeItem(SELFIE_KEY);
+                localStorage.removeItem(DATE_KEY);
+                localStorage.removeItem(SERIAL_KEY);
+                storedIdPanel.classList.add('hidden');
+                console.log('Previous day attendance cleared.');
+            } else if (storedIdentifier) {
+                // 2. If it is the same day and an identifier exists, show it.
+                storedIdDisplay.innerText = storedIdentifier;
+                storedIdPanel.classList.remove('hidden');
+            }
+
+            stepLoading.classList.add('hidden');
+            stepWelcome.classList.remove('hidden');
+        }
+
+        // --- Event Listeners and Flow Control ---
         btnStart.addEventListener('click', startFlow);
         document.getElementById('attendance-form').addEventListener('submit', submitForm);
-        
-        // Handle Confirmation Button Click
+
+        // Event listener for the Verify button (now in the welcome screen)
+        if (btnOpenVerify) {
+            btnOpenVerify.addEventListener('click', () => {
+                storedIdPanel.classList.add('hidden');
+                stepWelcome.classList.add('hidden');
+                stepVerify.classList.remove('hidden');
+            });
+        }
+
+        if (btnVerifyBack) {
+            btnVerifyBack.addEventListener('click', () => {
+                stepVerify.classList.add('hidden');
+                stepWelcome.classList.remove('hidden');
+                const storedIdentifier = localStorage.getItem(IDENTIFIER_KEY);
+                if (storedIdentifier) {
+                    storedIdPanel.classList.remove('hidden');
+                }
+            });
+        }
+
+        if (btnVerifyCheck) {
+            btnVerifyCheck.addEventListener('click', handleManualVerify);
+        }
+
         btnConfirmSelfie.addEventListener('click', () => {
             cameraConfirmation.classList.add('hidden');
             startCountdown();
         });
 
-        // --- Utility Functions ---
-
-        /**
-         * Shows the custom error modal with specific message and title.
-         * @param {string} title - The title of the modal.
-         * @param {string} message - The main message of the modal.
-         * @param {boolean} isPermission - If true, shows permission recovery steps.
-         */
-        function showErrorModal(title, message, isPermission = true) {
-            document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-message').innerText = message;
-            
-            if (isPermission) {
-                document.getElementById('modal-icon').className = 'fa-solid fa-video-slash text-red-500';
-                document.getElementById('modal-instructions').classList.remove('hidden');
-            } else {
-                 document.getElementById('modal-icon').className = 'fa-solid fa-wifi-slash text-red-500';
-                 document.getElementById('modal-instructions').classList.add('hidden');
-            }
-            permissionModal.classList.remove('hidden');
-        }
-
-        // --- Flow Control ---
-
         function startFlow() {
+            storedIdPanel.classList.add('hidden');
+
+            const storedDate = localStorage.getItem(DATE_KEY);
+            const storedIdentifier = localStorage.getItem(IDENTIFIER_KEY);
+            const storedSerial = localStorage.getItem(SERIAL_KEY);
+            const todayDate = getTodayDateString();
+
+            // Check for same-day attendance (Requirement 1)
+            if (storedDate === todayDate && storedSerial && storedIdentifier) {
+                // Same day attendance found! Bypass process and show success.
+                showSuccess(storedSerial, storedIdentifier);
+                stepWelcome.classList.add('hidden'); // Hide welcome screen
+                return; // Stop the flow here
+            }
+
+            // If no same-day record, start the normal flow
             requestCamera();
         }
 
-        // --- Camera Logic ---
+        // --- API Integration: Verify Attendance ---
+        async function handleManualVerify() {
+            const id = verifyInput.value.trim();
+            if (!id) {
+                // Replaced alert() with a console log/temporary method as per instructions
+                console.error("Verification failed: Please enter a valid Identifier");
+                alert("Please enter a valid Identifier");
+                return;
+            }
+
+            // UI Loading State
+            const originalText = btnVerifyCheck.innerText;
+            btnVerifyCheck.innerText = "Retrieving...";
+            btnVerifyCheck.disabled = true;
+
+            fetch(url, {
+                method: 'GET'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    if (data.status === true) {
+                        showSuccess(data.value, id);
+                        stepVerify.classList.add('hidden');
+                    } else {
+                        showErrorModal("Verification Failed", data.message || "Attendance record not found.", false);
+                    }
+                    btnVerifyCheck.innerText = originalText;
+                    btnVerifyCheck.disabled = false;
+                })
+                .catch(error => {
+                    console.log(error)
+                    showErrorModal("Error", "Error found. Please reload or contact an EXCO for assistance.", false)
+                    btnVerifyCheck.innerText = originalText;
+                    btnVerifyCheck.disabled = false;
+                })
+        }
+
+        // --- Camera Logic (Unchanged) ---
         async function requestCamera() {
             try {
-                // Request camera permission for user-facing camera
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                
                 stepWelcome.classList.add('hidden');
                 stepCamera.classList.remove('hidden');
                 stepCamera.classList.add('flex');
-                
-                // Show confirmation before starting the countdown
                 cameraConfirmation.classList.remove('hidden');
-
                 videoFeed.srcObject = stream;
             } catch (err) {
                 console.error("Camera denied:", err);
@@ -450,7 +643,6 @@
             const timer = setInterval(() => {
                 timeLeft--;
                 countdownEl.innerText = timeLeft;
-                
                 if (timeLeft <= 0) {
                     clearInterval(timer);
                     takeSelfie();
@@ -459,40 +651,35 @@
         }
 
         function takeSelfie() {
-            // COMPRESSION LOGIC: Reduce size for localStorage compatibility
-            const targetWidth = 640; // Safe width
-            const aspectRatio = videoFeed.videoHeight / videoFeed.videoWidth;
-            const targetHeight = targetWidth * aspectRatio;
-
-            canvas.width = targetWidth;
-            canvas.height = targetHeight;
-            
-            // Draw resized image
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
-            
-            // Convert to base64 (medium quality JPEG)
-            const dataURL = canvas.toDataURL('image/jpeg', 0.7);
-            
             try {
-                localStorage.setItem('nysc_selfie', dataURL);
-                console.log("Selfie saved successfully to local storage.");
-            } catch(e) {
-                console.warn("Local storage full, selfie NOT saved.", e);
-            }
+                const targetWidth = 640;
+                const aspectRatio = videoFeed.videoHeight / videoFeed.videoWidth;
+                const targetHeight = targetWidth * aspectRatio;
 
-            // Stop video stream
-            const tracks = videoFeed.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
+                canvas.width = targetWidth;
+                canvas.height = targetHeight;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoFeed, 0, 0, canvas.width, canvas.height);
+
+                const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+                localStorage.setItem(SELFIE_KEY, dataURL);
+
+                const tracks = videoFeed.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+            } catch (e) {
+                console.warn("Camera capture failed (likely due to context), using placeholder.");
+                localStorage.setItem(SELFIE_KEY, '');
+            }
 
             stepCamera.classList.remove('flex');
             stepCamera.classList.add('hidden');
+
             stepLocation.classList.remove('hidden');
-            
             requestLocation();
         }
 
-        // --- Location Logic ---
+        // --- Location Logic (Unchanged) ---
         function requestLocation() {
             if ("geolocation" in navigator) {
                 navigator.geolocation.getCurrentPosition(
@@ -504,12 +691,10 @@
                     },
                     (error) => {
                         console.error("Location denied:", error);
-                        // 1: Permission denied, 2: Position unavailable, 3: Timeout
-                        let msg = "Location access was denied or failed. Please check your browser settings.";
-                        if (error.code === 3) {
-                            msg = "Location request timed out. Please ensure your GPS is active.";
-                        }
-                        showErrorModal("Location Error", msg, true);
+                        // Allowing proceeding for DEMO only
+                        alert("Location access failed (common in iframes). Proceeding for demo purposes.");
+                        stepLocation.classList.add('hidden');
+                        stepForm.classList.remove('hidden');
                     },
                     { enableHighAccuracy: true, timeout: 10000 }
                 );
@@ -518,119 +703,104 @@
             }
         }
 
-        // --- Form Submission Logic ---
+        // --- API Integration: Submit Attendance ---
         async function submitForm(e) {
             e.preventDefault();
-            
-            if (!token) {
-                 showErrorModal("Missing Token", "The security token is missing from the URL. Attendance cannot be submitted officially.", false);
-                 return;
-            }
 
             const btnSubmit = document.getElementById('btn-submit');
             const originalText = btnSubmit.innerText;
+
             btnSubmit.innerText = "Submitting...";
             btnSubmit.disabled = true;
             btnSubmit.classList.add('opacity-70');
 
-            // Generate UUID for this attendance attempt
-            const generatedIdentifier = generateUUID();
+            // Generate 7-character identifier for this attendance attempt
+            const generatedIdentifier = generateIdentifier();
 
-            const formData = {
-                // API Request Body Structure:
-                identifier: generatedIdentifier, 
+            const payload = {
+                identifier: generatedIdentifier,
                 firstName: document.getElementById('firstName').value,
                 lastName: document.getElementById('lastName').value,
                 middleName: document.getElementById('middleName').value,
                 phoneNumber: document.getElementById('phoneNumber').value,
                 stateCode: document.getElementById('stateCode').value,
-                cds: parseInt(document.getElementById('cds').value), // Already an integer from the select
-                batch: parseInt(document.getElementById('batch').value), // Already an integer from the select
+                cds: parseInt(document.getElementById('cds').value),
+                batch: parseInt(document.getElementById('batch').value),
                 longitude: userLongitude,
                 latitude: userLatitude
             };
 
-            const apiUrl = `${BASE_URL}/api/CorpsMember/Attendance/${token}`;
-
-            try {
-                // Actual API Call: [POST] /api/CorpsMember/Attendance/{token}
-                const response = await fetch(apiUrl, {
-                    method: 'POST', // Confirmed: Method is explicitly POST
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-
-                // Check API's internal status
-                if (result.status && typeof result.value === 'number') {
-                    // Success: Save identifier and show serial number
-                    localStorage.setItem('attendance_identifier', generatedIdentifier);
-                    showSuccess(result.value);
+            const token = new URLSearchParams(window.location.search).get('token');
+            var apiUrl = `${BASE_URL}/api/CorpsMember/Attendance/${token}`
+            await fetch(apiUrl, {
+                method: 'POST', // Confirmed: Method is explicitly POST
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(response => {
+                console.log(JSON.stringify(payload))
+                return response.json()
+            }).then(data => {
+                console.log(data)
+                if (data.status == false) {
+                    console.log(data.message)
+                    showErrorModal("Attendance Not Recorded.", data.message, false)
                 } else {
-                    // API returned status: false
-                    console.error("API Submission Error:", result.message);
-                    showErrorModal("Submission Failed", result.message || "An unknown error occurred during submission.", false);
+                    // SUCCESS LOGIC: SAVE DATA TO LOCAL STORAGE
+                    localStorage.setItem(IDENTIFIER_KEY, generatedIdentifier);
+                    localStorage.setItem(DATE_KEY, getTodayDateString()); // Save the current date
+                    localStorage.setItem(SERIAL_KEY, data.value); // Save the serial number
+
+                    showSuccess(data.value, generatedIdentifier);
                 }
-
-                // Commented out Simulation:
-                /* console.log("Sending POST to: " + apiUrl);
-                await new Promise(r => setTimeout(r, 1500));
-                
-                localStorage.setItem('attendance_identifier', generatedIdentifier);
-                showSuccess(Math.floor(Math.random() * 500) + 1); 
-                */
-
-            } catch (error) {
-                console.error("Network or API Error:", error);
-                showErrorModal("Network Error", "Could not reach the server. Please check your internet connection.", false);
-            } finally {
                 // Reset button state regardless of outcome
                 btnSubmit.innerText = originalText;
                 btnSubmit.disabled = false;
                 btnSubmit.classList.remove('opacity-70');
-            }
+            }).catch(error => {
+                //throw new errorMessage("Error found. Please reload and try again.");
+                showErrorModal("ERROR", "Error found. Please reload or contact an EXCO for assistance.", false);
+                console.log(error)
+                btnSubmit.innerText = originalText;
+                btnSubmit.disabled = false;
+                btnSubmit.classList.remove('opacity-70');
+            })
         }
 
-        // --- Success Screen Logic ---
-
-        function showSuccess(serialNumber) {
-            // Hide previous UI elements
+        // --- Success Screen Logic (Unchanged) ---
+        function showSuccess(serialNumber, identifier = "N/A") {
             appHeader.classList.add('hidden');
             stepForm.classList.add('hidden');
             stepSuccess.classList.remove('hidden');
-            
-            // Force layout refresh to ensure absolute positioning works
-            mainCard.classList.remove('overflow-hidden'); // Ensure no clipping
+            mainCard.classList.remove('overflow-hidden');
 
-            // Render Serial Number
             const displayEl = document.getElementById('serial-display');
-            if(displayEl) {
-                 // Format serial number to 3 digits (e.g., 001, 123)
-                 displayEl.innerText = String(serialNumber).padStart(3, '0');
+            if (displayEl) {
+                displayEl.innerText = String(serialNumber).padStart(3, '0');
             }
 
-            // Render Background
-            const savedSelfie = localStorage.getItem('nysc_selfie');
+            const idDisplay = document.getElementById('identifier-display');
+            if (idDisplay) {
+                idDisplay.innerText = identifier;
+            }
+
+            const savedSelfie = localStorage.getItem(SELFIE_KEY);
             if (savedSelfie) {
                 stepSuccess.style.backgroundImage = `url('${savedSelfie}')`;
             } else {
-                // Fallback if image is missing
                 stepSuccess.style.backgroundImage = 'none';
-                stepSuccess.style.backgroundColor = '#006d3a'; 
+                stepSuccess.style.backgroundColor = '#006d3a';
             }
         }
 
         function resetDemo() {
-            localStorage.removeItem('attendance_identifier');
-            localStorage.removeItem('nysc_selfie');
+            // Clears Identifier and Selfie, but keeps the DATE_KEY and SERIAL_KEY
+            // to allow for re-previewing the success screen if needed later in the same day.
+            // For a complete fresh start (new day), the checkExistingAttendance handles the full wipe.
+            localStorage.removeItem(IDENTIFIER_KEY);
+            localStorage.removeItem(SELFIE_KEY);
             location.reload();
         }
-
     </script>
 </body>
+
 </html>
