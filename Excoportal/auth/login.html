@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYSC Admin Login</title>
+    <!-- Tailwind CSS for Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Glossy/Glassmorphism Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0fff4 0%, #dcfce7 100%);
+            min-height: 100vh;
+            color: #1a202c;
+        }
+
+        /* The Glossy Card Effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            border-radius: 20px;
+        }
+
+        .nysc-green-bg {
+            background-color: #006d3a;
+        }
+
+        .nysc-green-text {
+            color: #006d3a;
+        }
+
+        .btn-glossy {
+            background: linear-gradient(145deg, #007a41, #006033);
+            box-shadow: 0 4px 15px rgba(0, 109, 58, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-glossy:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 109, 58, 0.2);
+        }
+
+        /* --- Toast Notification Styles --- */
+        #toast-container {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            /* Start off-screen */
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        #toast-container.active {
+            /* Slide in */
+            transform: translateX(0);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #006d3a;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center p-4">
+
+    <!-- Toast Notification Container (Top Right) -->
+    <div id="toast-container" class="max-w-xs w-full">
+        <!-- Toast content is injected here -->
+    </div>
+
+
+    <!-- Main Container -->
+    <div id="main-card"
+        class="glass-panel w-full max-w-sm p-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center shadow-2xl">
+
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg">
+                <!-- Icon representing Admin/Access -->
+                <i class="fa-solid fa-user-shield text-3xl nysc-green-text"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800">Admin Login</h1>
+            <p class="text-sm text-gray-500">Access Management Portal</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="admin-login-form" class="space-y-6">
+
+            <!-- Email Input -->
+            <div>
+                <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                <div class="relative">
+                    <input type="email" id="email" required placeholder="your.name@admin.com"
+                        class="w-full p-3 pl-10 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:border-green-500 transition text-sm shadow-inner"
+                        autocomplete="email">
+                    <i
+                        class="fa-solid fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div>
+                <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                <div class="relative">
+                    <input type="password" id="password" required placeholder="••••••••"
+                        class="w-full p-3 pl-10 pr-10 bg-white/70 border border-gray-200 rounded-xl focus:outline-none focus:border-green-500 transition text-sm shadow-inner"
+                        autocomplete="current-password">
+                    <i class="fa-solid fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <!-- Show Password Toggle Button -->
+                    <button type="button" id="toggle-password"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-green-700 transition p-1"
+                        aria-label="Toggle password visibility">
+                        <i id="password-icon" class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <button type="submit" id="btn-login"
+                class="btn-glossy text-white w-full py-4 rounded-xl font-semibold text-lg tracking-wide mt-8 flex items-center justify-center gap-3">
+                <span id="btn-text">Log In</span>
+                <span id="btn-loader" class="hidden loader"></span>
+            </button>
+
+            <p class="text-center text-sm text-gray-500 pt-4">
+                <!-- Updated href for Forgot Password -->
+                <a href="InititatePasswordReset.html" class="hover:text-green-700 transition underline">Forgot Password?</a>
+            </p>
+
+        </form>
+
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Configuration ---
+        // Replace with your actual base URL
+        const BASE_URL = "https://nyscattendance.somee.com";
+        const LOGIN_ENDPOINT = `${BASE_URL}/api/Admin/Auth/Login`;
+        const TOAST_DURATION = 3000; // 3 seconds
+
+        // --- DOM Elements ---
+        const loginForm = document.getElementById('admin-login-form');
+        const btnLogin = document.getElementById('btn-login');
+        const btnText = document.getElementById('btn-text');
+        const btnLoader = document.getElementById('btn-loader');
+        const toastContainer = document.getElementById('toast-container');
+        
+        // New DOM Elements for Password Toggle
+        const passwordInput = document.getElementById('password');
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordIcon = document.getElementById('password-icon');
+
+        // --- Utility Functions ---
+
+        /**
+         * Clears all authentication tokens from local storage.
+         */
+        function clearAuthTokens() {
+            localStorage.removeItem('nyscadminjwt');
+            localStorage.removeItem('nyscadminexpiresTime');
+            localStorage.removeItem('nyscadminId');
+            localStorage.removeItem('nyscadminEmail');
+            // Also clear the temporary login identifier if it exists here, though usually cleared after OTP success
+            localStorage.removeItem('loginIdentifier');
+        }
+
+        /**
+         * Checks if the user is already authenticated and redirects if the token is valid.
+         * Executes immediately on page load.
+         * @returns {boolean} True if redirected, false otherwise.
+         */
+        function checkAuthenticationAndRedirect() {
+            const token = localStorage.getItem('nyscadminjwt');
+            const expiryTimeStr = localStorage.getItem('nyscadminexpiresTime');
+
+            if (token && expiryTimeStr) {
+                try {
+                    // Convert expiry time to Date object and get timestamp
+                    const expiryTime = new Date(expiryTimeStr).getTime();
+                    const currentTime = new Date().getTime();
+
+                    if (currentTime < expiryTime) {
+                        // Token is still valid, redirect to dashboard
+                        console.log("Valid token found. Redirecting to Dashboard.html.");
+                        // Redirect must be immediate
+                        window.location.href = "/Excoportal/lga/Dashboard.html";
+                        return true;
+                    } else {
+                        // Token has expired
+                        console.log("Expired token found. Clearing tokens.");
+                        clearAuthTokens();
+                        return false; // Stay on login page
+                    }
+                } catch (e) {
+                    console.error("Error parsing expiry time:", e);
+                    clearAuthTokens(); // Clear corrupted data
+                    return false;
+                }
+            }
+            // No token found
+            return false;
+        }
+
+        // Run authentication check immediately on page load
+        checkAuthenticationAndRedirect();
+        
+        /**
+         * Shows a sliding toast notification.
+         * @param {string} message The message to display.
+         * @param {'success'|'error'} type The type of toast (affects color and icon).
+         */
+        function showToast(message, type) {
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-500' : 'bg-red-500';
+            const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation';
+
+            // 1. Create the toast HTML
+            toastContainer.innerHTML = `
+                <div id="active-toast" class="flex items-center p-4 rounded-lg shadow-xl text-white ${bgColor}">
+                    <i class="fa-solid ${icon} mr-3 text-lg"></i>
+                    <span class="text-sm font-medium">${message}</span>
+                </div>
+            `;
+
+            // 2. Slide in
+            // Use setTimeout to ensure the transform: translateX(120%) is applied before setting 'active'
+            setTimeout(() => {
+                toastContainer.classList.add('active');
+            }, 50);
+
+            // 3. Slide out after duration
+            setTimeout(() => {
+                toastContainer.classList.remove('active');
+
+                // 4. Clear content after transition ends
+                setTimeout(() => {
+                    toastContainer.innerHTML = '';
+                }, 500); // Must match the CSS transition duration
+            }, TOAST_DURATION);
+        }
+
+        /**
+         * Toggles the visibility of the password input field.
+         */
+        function togglePasswordVisibility() {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            passwordIcon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            passwordInput.focus(); // Keep focus on the input
+        }
+
+        // --- Main Event Listeners ---
+        loginForm.addEventListener('submit', handleLogin);
+        if (togglePasswordBtn) {
+            togglePasswordBtn.addEventListener('click', togglePasswordVisibility);
+        }
+
+        // --- Login Logic ---
+        async function handleLogin(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            // Simple validation
+            if (!email || !password) {
+                showToast("Please enter both email and password.", 'error');
+                return;
+            }
+
+            // Set Loading State
+            btnText.classList.add('hidden');
+            btnLoader.classList.remove('hidden');
+            btnLogin.disabled = true;
+
+            const payload = { email, password };
+
+            try {
+                // Simulate API call for demonstration purposes
+                // Replace this with a real fetch(LOGIN_ENDPOINT, {...}) call
+                const response = await fetch(LOGIN_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+
+                if (data.status === true) {
+                    showToast(data.message, 'success');
+                    localStorage.setItem('loginIdentifier', data.value);
+                    console.log("Login successful. Token:", data.value);
+                    
+                    // REDIRECT: Redirect to ConfirmPasswordOTP.html on success
+                    setTimeout(() => {
+                        window.location.href = "ConfirmPasswordOTP.html";
+                    }, 500); // Wait 500ms for the toast to visually appear before navigating
+
+                } else {
+                    showToast(data.message, 'error');
+                    console.log("Login unsuccessful");
+                }
+            }
+            catch (error) {
+                console.error("Error:", error);
+                showToast("Network error. Please reload or contact support.", 'error');
+            }
+            finally {
+                // Reset Loading State
+                btnText.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+                btnLogin.disabled = false;
+            }
+        }
+    </script>
+</body>
+
+</html>
