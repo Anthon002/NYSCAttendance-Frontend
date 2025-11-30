@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYSC Admin - LGA Details</title>
+    <!-- Tailwind CSS for Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            /* Light Slate Blue/Gray */
+            color: #1e293b;
+        }
+
+        .nysc-green-bg {
+            background-color: #006d3a;
+        }
+
+        .nysc-green-text {
+            color: #006d3a;
+        }
+
+        .nysc-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: box-shadow 0.3s;
+        }
+
+        /* Responsive height for the main map */
+        #map-container {
+            height: 300px;
+            /* Default height for mobile */
+            width: 100%;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+        /* Increase height on larger screens */
+        @media (min-width: 1024px) {
+            #map-container {
+                height: 450px;
+            }
+        }
+
+        /* Specific styles for the Map inside the MODAL */
+        #modal-map-container {
+            height: 300px;
+            /* Responsive height */
+            width: 100%;
+            border-radius: 8px;
+            z-index: 10;
+        }
+
+
+        .skeleton {
+            animation: pulse 1.5s infinite;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Custom scrollbar for table container */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Header/Navigation -->
+    <header class="nysc-green-bg text-white shadow-lg">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+            <h1 class="text-xl sm:text-2xl font-bold">NYSC Admin Dashboard</h1>
+            <div class="flex items-center space-x-4 justify-end">
+                <!-- NEW: Team Members Button -->
+                <a href="/Excoportal/teams/Teams.html"
+                    class="text-sm font-medium hover:text-gray-200 transition px-3 py-1.5 rounded bg-white text-gray-800 hover:bg-gray-100 flex items-center">
+                    <i class="fa-solid fa-users-gear mr-2"></i> View Team Members
+                </a>
+                <!-- Back button always visible and prominent -->
+                <a href="./lga_details.html" class="text-sm font-medium hover:text-gray-200 transition">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> Back to LGAs
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header & Action Button -->
+        <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+            <h2 id="lga-name-header" class="text-2xl sm:text-3xl font-bold text-gray-800">
+                LGA Attendance Point Details
+            </h2>
+            <!-- Edit Button to trigger Update Modal -->
+            <button id="edit-lga-btn" onclick="openUpdateModal()"
+                class="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                disabled>
+                <i class="fa-solid fa-pen-to-square mr-2"></i> Edit Point
+            </button>
+        </div>
+        <p class="mb-8 text-gray-500 text-sm">Review location details and attendance records.</p>
+
+
+        <!-- Loading State / Error State -->
+        <div id="loading-state" class="text-center py-16">
+            <i class="fa-solid fa-spinner fa-spin text-4xl nysc-green-text"></i>
+            <p class="mt-4 text-gray-500">Fetching LGA details...</p>
+        </div>
+
+        <div id="error-state" class="text-center py-16 hidden">
+            <i class="fa-solid fa-triangle-exclamation text-4xl text-red-500"></i>
+            <p id="error-message" class="mt-4 text-red-500 font-semibold">Error loading details.</p>
+        </div>
+
+        <!-- Content Area (Hidden until loaded) -->
+        <div id="lga-content" class="hidden">
+
+            <!-- LGA Basic Info & Map (Responsive Grid: 1 col on mobile, 3 cols on desktop) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <!-- Column 1: Basic Information & Token -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="nysc-card p-6">
+                        <h3 class="text-xl font-bold border-b pb-3 mb-4 nysc-green-text">Basic Information</h3>
+
+                        <dl class="text-sm space-y-4">
+                            <div class="flex justify-between items-center">
+                                <dt class="font-medium text-gray-500">LGA Name</dt>
+                                <dd id="detail-name" class="font-semibold text-gray-800 skeleton w-1/2 h-5"></dd>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <dt class="font-medium text-gray-500">Latitude</dt>
+                                <dd id="detail-lat" class="font-semibold text-gray-800 skeleton w-1/3 h-5"></dd>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <dt class="font-medium text-gray-500">Longitude</dt>
+                                <dd id="detail-lng" class="font-semibold text-gray-800 skeleton w-1/3 h-5"></dd>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <dt class="font-medium text-gray-500">Opens At</dt>
+                                <dd id="detail-opens" class="font-semibold text-gray-800 skeleton w-1/4 h-5"></dd>
+                            </div>
+
+                            <div class="flex justify-between items-center">
+                                <dt class="font-medium text-gray-500">Closes At</dt>
+                                <dd id="detail-closes" class="font-semibold text-gray-800 skeleton w-1/4 h-5"></dd>
+                            </div>
+
+                            <!-- Display Distance -->
+                            <div class="flex justify-between items-center">
+                                <dt class="font-medium text-gray-500">Max Distance (m)</dt>
+                                <dd id="detail-distance" class="font-semibold text-gray-800 skeleton w-1/4 h-5"></dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <!-- Attendance Token Card -->
+                    <div class="nysc-card p-6">
+                        <h3 class="text-xl font-bold border-b pb-3 mb-4 nysc-green-text">Attendance Token</h3>
+
+                        <p class="text-xs text-gray-500 mb-3">
+                            This link is used by Corps Members to access the attendance portal for this LGA.
+                        </p>
+
+                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200 break-words">
+                            <p id="detail-token-url" class="text-sm font-mono text-gray-700 skeleton h-5"></p>
+                        </div>
+
+                        <button id="copy-token-btn"
+                            class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 transition disabled:opacity-50"
+                            disabled>
+                            <i class="fa-solid fa-copy mr-2"></i> Copy Attendance Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Column 2 & 3: Map View -->
+                <div class="lg:col-span-2">
+                    <div class="nysc-card p-6">
+                        <h3 class="text-xl font-bold border-b pb-3 mb-4 nysc-green-text">Attendance Location</h3>
+                        <!-- Map Container with responsive height -->
+                        <div id="map-container"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Records Section -->
+            <div class="nysc-card p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-3 mb-6">
+                    <h3 class="text-xl font-bold nysc-green-text flex items-center">
+                        <span><i class="fa-solid fa-list-check mr-2"></i> Attendance Records</span>
+                        <span id="record-count-info" class="text-sm font-medium text-gray-500 ml-3"></span>
+                    </h3>
+                    
+                    <!-- NEW: Download Button -->
+                    <button id="download-records-btn" onclick="downloadAttendanceRecords()"
+                        class="mt-3 sm:mt-0 px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                        disabled>
+                        <i class="fa-solid fa-download mr-2"></i> Download All
+                    </button>
+                </div>
+
+
+                <!-- Filter Controls (Responsive Grid: 1 or 2 cols on mobile, 6 cols on desktop) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                    <!-- From Date -->
+                    <div>
+                        <label for="filter-from" class="block text-xs font-medium text-gray-500 mb-1">From</label>
+                        <input type="date" id="filter-from"
+                            class="w-full p-2 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm">
+                    </div>
+                    <!-- To Date -->
+                    <div>
+                        <label for="filter-to" class="block text-xs font-medium text-gray-500 mb-1">To</label>
+                        <input type="date" id="filter-to"
+                            class="w-full p-2 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm">
+                    </div>
+                    <!-- Batch Filter -->
+                    <div>
+                        <label for="filter-batch" class="block text-xs font-medium text-gray-500 mb-1">Batch</label>
+                        <select id="filter-batch"
+                            class="w-full p-2 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm"></select>
+                    </div>
+                    <!-- CDS Filter -->
+                    <div>
+                        <label for="filter-cds" class="block text-xs font-medium text-gray-500 mb-1">CDS Group</label>
+                        <select id="filter-cds"
+                            class="w-full p-2 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm"></select>
+                    </div>
+                    <!-- Day of Week Filter -->
+                    <div>
+                        <label for="filter-day" class="block text-xs font-medium text-gray-500 mb-1">Day</label>
+                        <select id="filter-day"
+                            class="w-full p-2 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm">
+                            <option value="">All Days</option>
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+                    <!-- Search Input -->
+                    <div class="lg:col-span-1 sm:col-span-2 md:col-span-1">
+                        <label for="filter-search" class="block text-xs font-medium text-gray-500 mb-1">Search</label>
+                        <div class="relative">
+                            <input type="text" id="filter-search" placeholder="Name or State Code"
+                                class="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm">
+                            <i
+                                class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table Container (Horizontal Scroll on Mobile) -->
+                <div class="table-container overflow-x-auto relative shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-500 min-w-[700px]">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Serial No.</th>
+                                <th scope="col" class="px-6 py-3">Corps Member Name</th>
+                                <th scope="col" class="px-6 py-3">State Code</th>
+                                <th scope="col" class="px-6 py-3">CDS Group</th>
+                                <th scope="col" class="px-6 py-3">Recorded At</th>
+                                <th scope="col" class="px-6 py-3">Day of Week</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-records-body">
+                            <!-- Records will be injected here -->
+                            <tr id="initial-table-message" class="bg-white border-b">
+                                <td colspan="6" class="px-6 py-4 text-center text-gray-400">
+                                    Records loading or awaiting filters...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Loading/Empty State Overlay -->
+                    <div id="attendance-loading-overlay"
+                        class="absolute inset-0 bg-white bg-opacity-70 flex justify-center items-center hidden">
+                        <i class="fa-solid fa-spinner fa-spin text-3xl nysc-green-text"></i>
+                    </div>
+                </div>
+
+                <!-- Pagination Controls (Responsive: Stack on mobile, row on tablet/desktop) -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-4 sm:space-y-0">
+                    <div class="text-sm text-gray-700 order-3 sm:order-1" id="pagination-summary">
+                        Showing <span id="start-record">0</span> to <span id="end-record">0</span> of <span
+                            id="total-records">0</span> records
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <nav class="flex items-center space-x-2 order-1 sm:order-2">
+                        <button id="prev-page-btn" onclick="goToPage(attendanceState.pageNumber - 1)"
+                            class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                            disabled>
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+
+                        <span id="page-number-display" class="text-sm font-semibold text-gray-700">Page 1 of 1</span>
+
+                        <button id="next-page-btn" onclick="goToPage(attendanceState.pageNumber + 1)"
+                            class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                            disabled>
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </nav>
+
+                    <!-- Page Size Selector -->
+                    <div class="flex items-center space-x-2 order-2 sm:order-3">
+                        <label for="page-size-select" class="text-sm text-gray-700">Records per page:</label>
+                        <select id="page-size-select" onchange="setPageSize(this.value)"
+                            class="p-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+            <!-- End Attendance Records Section -->
+
+        </div>
+    </main>
+
+    <!-- Update Modal (Hidden by default) -->
+    <div id="update-modal"
+        class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <!-- MODAL CONTENT: max-w-4xl for desktop, max-h-[95vh] and overflow-y-auto for height fix -->
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-y-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl sm:text-2xl font-bold nysc-green-text">Update LGA Attendance Point</h3>
+                <button onclick="closeUpdateModal()" class="text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form id="update-lga-form" class="space-y-6">
+                    <input type="hidden" id="update-id">
+
+                    <!-- Form Fields & Map Wrapper (Responsive Grid: 1 col on mobile, 2 cols on desktop) -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                        <!-- Left Column: Form Fields -->
+                        <div class="space-y-4">
+                            <!-- Name: MADE EDITABLE -->
+                            <div>
+                                <label for="update-name" class="block text-sm font-medium text-gray-700 mb-1">LGA
+                                    Name</label>
+                                <input type="text" id="update-name" required
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                            </div>
+
+                            <!-- Opens At / Closes At (Stacked on mobile) -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="update-opens-at" class="block text-sm font-medium text-gray-700 mb-1">Opens
+                                        At (Time)</label>
+                                    <input type="time" id="update-opens-at" required
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                                </div>
+                                <div>
+                                    <label for="update-closes-at"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Closes At (Time)</label>
+                                    <input type="time" id="update-closes-at" required
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                                </div>
+                            </div>
+
+                            <!-- Max Distance -->
+                            <div>
+                                <label for="update-distance" class="block text-sm font-medium text-gray-700 mb-1">Max
+                                    Distance (Meters)</label>
+                                <input type="number" id="update-distance" min="50" max="500" value="50" required
+                                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                                <p class="mt-1 text-xs text-gray-500">Maximum allowed distance (in meters) from this point
+                                    for attendance.</p>
+                            </div>
+
+                            <!-- Latitude / Longitude (Stacked on mobile) -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="update-latitude"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Latitude</label>
+                                    <input type="text" id="update-latitude" disabled
+                                        class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-sm">
+                                </div>
+                                <div>
+                                    <label for="update-longitude"
+                                        class="block text-sm font-medium text-gray-700 mb-1">Longitude</label>
+                                    <input type="text" id="update-longitude" disabled
+                                        class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Interactive Map -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Drag Marker to set New Location</label>
+                            <div id="modal-map-container" class="rounded-lg shadow-md"></div>
+                            <p class="mt-2 text-xs text-gray-500 text-center">Click or drag the marker to pinpoint the exact
+                                location.</p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="update-lga-submit-btn"
+                        class="w-full nysc-green-bg text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center"
+                        disabled>
+                        <i class="fa-solid fa-save mr-2"></i>
+                        <span>Save Changes</span>
+                    </button>
+                </form>
+
+                <div id="update-loading-status" class="text-center mt-4 hidden">
+                    <i class="fa-solid fa-spinner fa-spin nysc-green-text text-xl"></i>
+                    <p class="text-sm text-gray-500 mt-2">Updating location data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Update Modal -->
+
+    <!-- Toast Notification Container (Top Right) -->
+    <div id="toast-container"
+        class="max-w-xs w-full fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300">
+        <!-- Toast content is injected here -->
+    </div>
+
+    <!-- JavaScript Logic -->
+    <!-- Leaflet JS for Map -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        // --- Configuration ---
+        const BASE_URL = "https://nyscattendance.somee.com";
+        const LGA_ENDPOINT = `${BASE_URL}/api/Admin/LGA`;
+        const ATTENDANCE_ENDPOINT_BASE = `${LGA_ENDPOINT}/`; // LGA/{id}/Attendance
+        const EXPORT_ENDPOINT_BASE = `${LGA_ENDPOINT}/`; // LGA/{id}/Export
+        const TOAST_DURATION = 3000;
+
+        // Enum Definitions
+        const BATCH_ENUM = {
+            NOTGIVEN: { value: 0, label: 'All Batches' },
+            A1: { value: 1, label: 'Batch A Stream 1' },
+            A2: { value: 2, label: 'Batch A Stream 2' },
+            B1: { value: 3, label: 'Batch B Stream 1' },
+            B2: { value: 4, label: 'Batch B Stream 2' },
+            C1: { value: 5, label: 'Batch C Stream 1' },
+            C2: { value: 6, label: 'Batch C Stream 2' }
+        };
+
+        // --- State Variables ---
+        let map; // Main map on the details page
+        let marker;
+        let updateMap; // Map inside the update modal
+        let updateMarker;
+        let lgaData = null;
+        let lgaId = null;
+
+        // Attendance State for Pagination and Filters
+        const attendanceState = {
+            pageNumber: 1,
+            pageSize: 10,
+            from: null,
+            to: null,
+            batch: null,
+            cds: null, // This is now expected to be a string
+            dayOfWeek: null,
+            search: null,
+            totalPages: 1,
+            totalRecordCount: 0,
+        };
+
+        // --- DOM Elements ---
+        const lgaNameHeader = document.getElementById('lga-name-header');
+        const editLgaBtn = document.getElementById('edit-lga-btn');
+        const loadingState = document.getElementById('loading-state');
+        const errorState = document.getElementById('error-state');
+        const errorMessage = document.getElementById('error-message');
+        const lgaContent = document.getElementById('lga-content');
+        const detailName = document.getElementById('detail-name');
+        const detailLat = document.getElementById('detail-lat');
+        const detailLng = document.getElementById('detail-lng');
+        const detailOpens = document.getElementById('detail-opens');
+        const detailCloses = document.getElementById('detail-closes');
+        const detailDistance = document.getElementById('detail-distance');
+        const detailTokenUrl = document.getElementById('detail-token-url');
+        const copyTokenBtn = document.getElementById('copy-token-btn');
+        const toastContainer = document.getElementById('toast-container');
+        const downloadRecordsBtn = document.getElementById('download-records-btn');
+
+        // Attendance Section DOM Elements
+        const attendanceRecordsBody = document.getElementById('attendance-records-body');
+        const attendanceLoadingOverlay = document.getElementById('attendance-loading-overlay');
+        const filterFrom = document.getElementById('filter-from');
+        const filterTo = document.getElementById('filter-to');
+        const filterBatch = document.getElementById('filter-batch');
+        const filterCds = document.getElementById('filter-cds');
+        const filterDay = document.getElementById('filter-day');
+        const filterSearch = document.getElementById('filter-search');
+        const pageSizeSelect = document.getElementById('page-size-select');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageNumberDisplay = document.getElementById('page-number-display');
+        const recordCountInfo = document.getElementById('record-count-info');
+
+        // Pagination Summary elements
+        const startRecordSpan = document.getElementById('start-record');
+        const endRecordSpan = document.getElementById('end-record');
+        const totalRecordsSpan = document.getElementById('total-records');
+
+        // Update Modal DOM Elements
+        const updateModal = document.getElementById('update-modal');
+        const updateIdInput = document.getElementById('update-id');
+        const updateNameInput = document.getElementById('update-name');
+        const updateOpensAtInput = document.getElementById('update-opens-at');
+        const updateClosesAtInput = document.getElementById('update-closes-at');
+        const updateDistanceInput = document.getElementById('update-distance');
+        const updateLatitudeInput = document.getElementById('update-latitude');
+        const updateLongitudeInput = document.getElementById('update-longitude');
+        const updateLgaForm = document.getElementById('update-lga-form');
+        const updateLgaSubmitBtn = document.getElementById('update-lga-submit-btn');
+        const updateLoadingStatus = document.getElementById('update-loading-status');
+
+
+        // --- Utility Functions ---
+
+        function logout() {
+            localStorage.removeItem('nyscadminjwt');
+            localStorage.removeItem('nyscadminexpiresTime');
+            localStorage.removeItem('nyscadminId');
+            localStorage.removeItem('nyscadminEmail');
+            window.location.href = "/Excoportal/auth/login.html";
+        }
+
+        function getValidToken() {
+            const token = localStorage.getItem('nyscadminjwt');
+            const expiryTimeStr = localStorage.getItem('nyscadminexpiresTime');
+
+            if (token && expiryTimeStr) {
+                const expiryTime = new Date(expiryTimeStr).getTime();
+                const currentTime = new Date().getTime();
+
+                if (currentTime < expiryTime) {
+                    return token;
+                }
+            }
+            console.log("Authentication token invalid or expired. Redirecting to login.");
+            logout();
+            return null;
+        }
+
+        function getUrlParameter(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function showToast(message, type) {
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-500' : 'bg-red-500';
+            const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation';
+
+            toastContainer.innerHTML = `
+                <div id="active-toast" class="flex items-center p-4 rounded-lg shadow-xl text-white ${bgColor}">
+                    <i class="fa-solid ${icon} mr-3 text-lg"></i>
+                    <span class="text-sm font-medium">${message}</span>
+                </div>
+            `;
+
+            toastContainer.classList.remove('translate-x-full');
+
+            setTimeout(() => {
+                toastContainer.classList.add('translate-x-full');
+
+                setTimeout(() => {
+                    toastContainer.innerHTML = '';
+                }, 300);
+            }, TOAST_DURATION);
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        showToast("Link copied to clipboard.", 'success');
+                    })
+                    .catch(err => {
+                        copyToClipboardFallback(text);
+                    });
+            } else {
+                copyToClipboardFallback(text);
+            }
+        }
+
+        function copyToClipboardFallback(text) {
+            try {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = text;
+                tempInput.style.position = 'absolute';
+                tempInput.style.left = '-9999px';
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showToast("Link copied to clipboard (Fallback).", 'success');
+            } catch (err) {
+                showToast("Failed to copy link. Please copy manually.", 'error');
+            }
+        }
+
+        /**
+         * Initializes or updates the main Leaflet map on the details page.
+         */
+        function initMap(lat, lng, name) {
+            const latlng = [lat, lng];
+            const mapContainerId = 'map-container';
+
+            if (map) {
+                map.remove();
+                marker = null;
+            }
+
+            map = L.map(mapContainerId, {
+                attributionControl: false,
+                zoomControl: true,
+                scrollWheelZoom: true
+            }).setView(latlng, 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            marker = L.marker(latlng).addTo(map)
+                .bindPopup(`<b>${name} Attendance Point</b>`)
+                .openPopup();
+
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+        }
+
+        /**
+         * Initializes the Leaflet map inside the update modal.
+         */
+        function initUpdateMap(initialLat, initialLng) {
+            const mapContainerId = 'modal-map-container';
+
+            if (updateMap) {
+                updateMap.remove();
+                updateMarker = null;
+            }
+
+            // Must invalidate size after the modal is visible
+            updateModal.classList.remove('hidden');
+
+            updateMap = L.map(mapContainerId, {
+                attributionControl: false,
+                zoomControl: true,
+                scrollWheelZoom: true,
+                // The map must be initialized with a center view
+            }).setView([initialLat, initialLng], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(updateMap);
+
+            updateMarker = L.marker([initialLat, initialLng], {
+                draggable: true // Make the marker draggable
+            }).addTo(updateMap);
+
+            // Update Lat/Lng inputs when marker is dragged
+            updateMarker.on('dragend', (e) => {
+                const latlng = e.target.getLatLng();
+                updateLatitudeInput.value = latlng.lat.toFixed(6);
+                updateLongitudeInput.value = latlng.lng.toFixed(6);
+            });
+
+            // Re-center map and invalidate size after it's fully visible
+            setTimeout(() => {
+                updateMap.invalidateSize();
+                updateMap.setView([initialLat, initialLng], 15);
+            }, 50);
+
+            // Enable submit button after map is initialized
+            updateLgaSubmitBtn.disabled = false;
+        }
+
+        // --- Date/Time Formatting ---
+        function formatRecordedAt(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+
+        // --- Attendance Filter Initialization ---
+
+        function populateEnums() {
+            // Populate Batch filter
+            filterBatch.innerHTML = '<option value="">All Batches</option>';
+            // Skip NOTGIVEN (value 0) in the display list, as it's the "All" default
+            Object.values(BATCH_ENUM).filter(b => b.value !== 0).forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.value;
+                option.textContent = batch.label;
+                filterBatch.appendChild(option);
+            });
+
+            // Populate CDS filter - Now expecting string values from the API for filtering,
+            // so we only initialize the 'All' option here. The actual list of unique CDS strings
+            // would need to be fetched separately if we wanted a complete filter dropdown.
+            filterCds.innerHTML = '<option value="">All CDS Groups</option>';
+
+            // Attach event listeners to filters for automatic refresh
+            [filterFrom, filterTo, filterBatch, filterCds, filterDay].forEach(el => {
+                el.addEventListener('change', () => fetchAttendanceRecords(1)); // Reset to page 1 on filter change
+            });
+
+            // Debounced search input
+            let searchTimeout = null;
+            filterSearch.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    fetchAttendanceRecords(1); // Reset to page 1 on search
+                }, 500); // 500ms debounce
+            });
+
+            // Set default page size
+            pageSizeSelect.value = attendanceState.pageSize;
+        }
+
+        // --- Attendance Paging Logic ---
+
+        /**
+         * Sets the page size and re-fetches records from page 1.
+         * @param {number} size The new page size.
+         */
+        function setPageSize(size) {
+            attendanceState.pageSize = parseInt(size, 10);
+            fetchAttendanceRecords(1);
+        }
+
+        /**
+         * Navigates to a specific page number.
+         * @param {number} page The page number to navigate to (1-based).
+         */
+        function goToPage(page) {
+            if (page >= 1 && page <= attendanceState.totalPages) {
+                fetchAttendanceRecords(page);
+            }
+        }
+
+        /**
+         * Updates the UI elements related to pagination and record count.
+         */
+        function updatePaginationUI() {
+            const { pageNumber, totalPages, totalRecordCount, pageSize } = attendanceState;
+
+            // Pagination Buttons
+            prevPageBtn.disabled = pageNumber === 1 || totalRecordCount === 0;
+            nextPageBtn.disabled = pageNumber === totalPages || totalRecordCount === 0;
+
+            // Page Number Display
+            pageNumberDisplay.textContent = `Page ${pageNumber} of ${totalPages}`;
+
+            // Summary
+            totalRecordsSpan.textContent = totalRecordCount;
+
+            const start = (pageNumber - 1) * pageSize + 1;
+            const end = Math.min(pageNumber * pageSize, totalRecordCount);
+
+            startRecordSpan.textContent = totalRecordCount === 0 ? 0 : start;
+            endRecordSpan.textContent = end;
+
+            recordCountInfo.textContent = `(${totalRecordCount} total)`;
+
+            // Enable/Disable Download button based on data
+            downloadRecordsBtn.disabled = totalRecordCount === 0;
+        }
+
+
+        // --- Attendance Data Fetching Logic ---
+
+        /**
+         * Converts a YYYY-MM-DD date string from the input field into a
+         * .NET DateTimeOffset compatible ISO 8601 string: YYYY-MM-DDTHH:MM:SS.ffffffZ.
+         * This uses the 'T' separator and 'Z' for UTC.
+         * @param {string} dateString The date in 'YYYY-MM-DD' format.
+         * @param {boolean} isToDate If true, sets time to 23:59:59.999999 (end of day).
+         * @returns {string} The date in ISO 8601 DateTimeOffset format (e.g., '2025-01-01T00:00:00.000000Z').
+         */
+        function toDateTimeOffset(dateString, isToDate) {
+            if (!dateString) return null;
+
+            // Time for "From" date is 00:00:00.000000 (start of the day)
+            // Time for "To" date is 23:59:59.999999 (end of the day for filtering)
+            const timeComponent = isToDate
+                ? '23:59:59.999999'
+                : '00:00:00.000000';
+
+            // Format: YYYY-MM-DDTHH:MM:SS.ffffffZ
+            // This is the standard ISO 8601 format usually expected by .NET Web APIs for DateTimeOffset query parameters
+            return `${dateString}T${timeComponent}Z`;
+        }
+
+
+        /**
+         * Constructs the query parameters based on current filter state.
+         * This is reused for both fetching table data and exporting.
+         * @param {number|null} page The page number to fetch (null for export).
+         * @returns {URLSearchParams} The URL search parameters object.
+         */
+        function getAttendanceQueryParams(page = null) {
+            const params = new URLSearchParams();
+
+            if (page !== null) {
+                // Only include pagination parameters if a page number is provided (for table fetching)
+                params.set('pageNumber', page.toString());
+                params.set('pageSize', attendanceState.pageSize.toString());
+            }
+
+            // 1. Convert 'from' date to start-of-day ISO 8601
+            const fromDateOffset = toDateTimeOffset(filterFrom.value, false);
+            // 2. Convert 'to' date to end-of-day ISO 8601
+            const toDateOffset = toDateTimeOffset(filterTo.value, true);
+
+            if (fromDateOffset) params.set('from', fromDateOffset);
+            if (toDateOffset) params.set('to', toDateOffset);
+
+            // 3. Add other filters
+            if (filterBatch.value) params.set('batch', filterBatch.value);
+            // CDS is now expected to be a string
+            if (filterCds.value) params.set('cds', filterCds.value);
+            if (filterDay.value) params.set('dayOfWeek', filterDay.value);
+            if (filterSearch.value) params.set('search', filterSearch.value.trim());
+
+            return params;
+        }
+
+        /**
+         * Fetches and renders attendance records for the LGA.
+         * @param {number} page The page number to load.
+         */
+        async function fetchAttendanceRecords(page) {
+            const token = getValidToken();
+            if (!token || !lgaId) return;
+
+            attendanceLoadingOverlay.classList.remove('hidden');
+            attendanceRecordsBody.innerHTML = ''; // Clear table for new content
+
+            try {
+                const params = getAttendanceQueryParams(page);
+                const fetchUrl = `${ATTENDANCE_ENDPOINT_BASE}${lgaId}/Attendance?${params.toString()}`;
+
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.status === true && result.value) {
+                    const data = result.value;
+
+                    // Update state
+                    attendanceState.pageNumber = data.currentPage || 1;
+                    attendanceState.totalPages = data.totalPages || 1;
+                    attendanceState.totalRecordCount = data.totalRecordCount || 0;
+
+                    renderAttendanceTable(data.records || []);
+                    updatePaginationUI();
+                } else {
+                    attendanceState.totalRecordCount = 0;
+                    renderAttendanceTable([]);
+                    updatePaginationUI();
+                    // Don't show toast for "No records found" if it's the only issue.
+                    // showToast(result.message || "Failed to fetch attendance records.", 'error');
+                }
+            } catch (error) {
+                console.error("Error fetching attendance records:", error);
+                attendanceState.totalRecordCount = 0;
+                renderAttendanceTable([]); // Show empty table state
+                updatePaginationUI();
+                showToast("An unexpected error occurred while fetching records.", 'error');
+            } finally {
+                attendanceLoadingOverlay.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Renders the attendance records into the table body.
+         * @param {Array<Object>} records The list of attendance records.
+         */
+        function renderAttendanceTable(records) {
+            attendanceRecordsBody.innerHTML = ''; // Clear previous records
+
+            if (records.length === 0) {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b';
+                row.innerHTML = `<td colspan="6" class="px-6 py-4 text-center text-gray-500 font-medium">No attendance records found for the current filters.</td>`;
+                attendanceRecordsBody.appendChild(row);
+                return;
+            }
+
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+
+                const fullName = `${record.firstName || ''} ${record.middleName ? record.middleName + ' ' : ''}${record.lastName || ''}`;
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-mono text-gray-600">${record.serialNumber || 'N/A'}</td>
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        ${fullName.trim() || 'N/A'}
+                    </th>
+                    <td class="px-6 py-4">${record.stateCode || 'N/A'}</td>
+                    <td class="px-6 py-4">${record.cds || 'N/A'}</td> <!-- CDS is now expected as a string -->
+                    <td class="px-6 py-4">${record.recordedAt ? formatRecordedAt(record.recordedAt) : 'N/A'}</td>
+                    <td class="px-6 py-4">${record.day || 'N/A'}</td>
+                `;
+                attendanceRecordsBody.appendChild(row);
+            });
+        }
+
+        // --- Download Feature Logic ---
+
+        /**
+         * Initiates the download of filtered attendance records as a spreadsheet.
+         */
+        async function downloadAttendanceRecords() {
+            const token = getValidToken();
+            if (!token || !lgaId) return;
+
+            const originalBtnText = downloadRecordsBtn.innerHTML;
+            downloadRecordsBtn.disabled = true;
+            downloadRecordsBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Generating...';
+
+            try {
+                // Get query parameters (without pagination)
+                const params = getAttendanceQueryParams(null);
+                const fetchUrl = `${EXPORT_ENDPOINT_BASE}${lgaId}/Export?${params.toString()}`;
+
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                        // Do NOT set Content-Type: application/json, as we expect a file/blob response
+                    }
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+
+                if (!response.ok) {
+                    // Attempt to read error message if content type is JSON
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        const errorResult = await response.json();
+                        throw new Error(errorResult.message || `Failed to download file. Status: ${response.status}`);
+                    }
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Get the blob data from the response
+                const blob = await response.blob();
+                
+                // Get filename from headers (or use a default)
+                let filename = `Attendance_Records_${lgaData.name || lgaId}.xlsx`;
+                const contentDisposition = response.headers.get('Content-Disposition');
+                if (contentDisposition && contentDisposition.indexOf('filename=') !== -1) {
+                    // Extract filename if provided by the backend
+                    filename = contentDisposition.split('filename=')[1].replace(/['"]/g, '');
+                }
+
+                // Create a temporary URL and link to trigger the download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename; // Set the intended filename
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+                showToast(`Attendance records downloaded as ${filename}.`, 'success');
+
+            } catch (error) {
+                console.error("Error during download:", error);
+                showToast(error.message || "An unexpected error occurred during download.", 'error');
+            } finally {
+                downloadRecordsBtn.disabled = false;
+                downloadRecordsBtn.innerHTML = originalBtnText;
+            }
+        }
+
+
+        // --- Core Data Fetching Logic ---
+
+        /**
+         * Fetches the specific LGA data based on the ID in the URL.
+         */
+        async function fetchLGAData() {
+            const token = getValidToken();
+            lgaId = getUrlParameter('id'); // Set global lgaId
+
+            if (!token || !lgaId) {
+                if (loadingState) loadingState.classList.add('hidden');
+                errorMessage.textContent = "Invalid request: LGA ID not found in URL.";
+                errorState.classList.remove('hidden');
+                return;
+            }
+
+            if (loadingState) loadingState.classList.remove('hidden');
+            errorState.classList.add('hidden');
+            lgaContent.classList.add('hidden');
+
+            const fetchUrl = `${LGA_ENDPOINT}/${lgaId}`;
+
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.status === true && data.value) {
+                    lgaData = data.value;
+                    renderLGA(lgaData);
+                    // Automatically fetch the first page of attendance records after LGA details load
+                    fetchAttendanceRecords(attendanceState.pageNumber);
+                } else {
+                    throw new Error(data.message || "LGA details not found.");
+                }
+            } catch (error) {
+                console.error("Error fetching LGA data:", error);
+                errorMessage.textContent = error.message || "An unexpected error occurred while fetching data.";
+                errorState.classList.remove('hidden');
+            } finally {
+                if (loadingState) loadingState.classList.add('hidden');
+            }
+        }
+
+        function renderLGA(lga) {
+            // Renders LGA Info
+            lgaNameHeader.textContent = lga.name;
+            detailName.textContent = lga.name;
+            detailLat.textContent = parseFloat(lga.latitude).toFixed(6);
+            detailLng.textContent = parseFloat(lga.longitude).toFixed(6);
+            detailOpens.textContent = lga.openTime;
+            detailCloses.textContent = lga.closeTime;
+            detailDistance.textContent = `${lga.distanceInMeters || 50}m`;
+
+            const tokenUrl = `${window.location.origin}/?token=${lga.token}`;
+            detailTokenUrl.textContent = tokenUrl;
+
+            copyTokenBtn.disabled = false;
+            copyTokenBtn.onclick = () => copyToClipboard(tokenUrl);
+            editLgaBtn.disabled = false; // Enable the edit button
+
+            [detailName, detailLat, detailLng, detailOpens, detailCloses, detailDistance, detailTokenUrl].forEach(el => {
+                el.classList.remove('skeleton', 'w-1/2', 'w-1/3', 'w-1/4', 'h-5');
+            });
+
+            // Initialize the map
+            initMap(parseFloat(lga.latitude), parseFloat(lga.longitude), lga.name);
+
+            // Show the content
+            lgaContent.classList.remove('hidden');
+        }
+
+        // --- Update Modal Functions ---
+
+        function openUpdateModal() {
+            if (!lgaData) {
+                showToast("LGA data not loaded. Please try again.", 'error');
+                return;
+            }
+
+            // Populate form fields
+            updateIdInput.value = lgaData.id;
+            updateNameInput.value = lgaData.name;
+            updateOpensAtInput.value = lgaData.openTime; // Use openTime from backend
+            updateClosesAtInput.value = lgaData.closeTime; // Use closeTime from backend
+            updateDistanceInput.value = lgaData.distanceInMeters;
+            updateLatitudeInput.value = parseFloat(lgaData.latitude).toFixed(6);
+            updateLongitudeInput.value = parseFloat(lgaData.longitude).toFixed(6);
+
+            // Initialize map in modal
+            const lat = parseFloat(lgaData.latitude);
+            const lng = parseFloat(lgaData.longitude);
+            initUpdateMap(lat, lng);
+
+            // Show modal (note: initUpdateMap handles the unhiding before invalidating size)
+            updateModal.classList.remove('hidden');
+            updateLgaSubmitBtn.disabled = false;
+        }
+
+        function closeUpdateModal() {
+            updateModal.classList.add('hidden');
+            // Cleanup map instance if necessary
+            if (updateMap) {
+                updateMap.remove();
+                updateMap = null;
+                updateMarker = null;
+            }
+        }
+
+        // Handle update form submission
+        updateLgaForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            updateLgaSubmitBtn.disabled = true;
+            updateLoadingStatus.classList.remove('hidden');
+
+            const token = getValidToken();
+            if (!token) {
+                updateLgaSubmitBtn.disabled = false;
+                updateLoadingStatus.classList.add('hidden');
+                return;
+            }
+
+            // Read the potentially updated name from the input field
+            const newName = updateNameInput.value.trim();
+
+            const payload = {
+                id: lgaId, // Ensure we use the URL-derived ID
+                opensAt: updateOpensAtInput.value,
+                closesAt: updateClosesAtInput.value,
+                latitude: parseFloat(updateLatitudeInput.value),
+                longitude: parseFloat(updateLongitudeInput.value),
+                distanceInMeters: parseInt(updateDistanceInput.value, 10),
+                name: newName // Include the (now editable) name
+            };
+
+            const fetchUrl = `${LGA_ENDPOINT}/${lgaId}`;
+
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+
+                const result = await response.json();
+
+                if (response.ok && result.status === true) {
+                    showToast("LGA details updated successfully!", 'success');
+                    closeUpdateModal();
+                    // Re-fetch data to update the details section on the main page
+                    fetchLGAData();
+                } else {
+                    const errorMsg = result.message || "Failed to update LGA details.";
+                    showToast(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error("Error updating LGA data:", error);
+                showToast("An unexpected network error occurred.", 'error');
+            } finally {
+                updateLgaSubmitBtn.disabled = false;
+                updateLoadingStatus.classList.add('hidden');
+            }
+        });
+
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (getValidToken()) {
+                populateEnums();
+                fetchLGAData();
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -46,6 +46,12 @@
             /* Fixed height for uniformity */
             overflow: hidden;
             border: 1px solid #e2e8f0;
+            cursor: pointer; /* Added cursor pointer to indicate clickability */
+        }
+
+        .lga-grid-item:hover {
+             border-color: #006d3a;
+             box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
         }
 
         .btn-primary {
@@ -82,6 +88,70 @@
         /* Style for the searchable LGA list items */
         .lga-list-container .hover\:bg-green-50:hover {
             background-color: #f0fff4;
+        }
+
+        /* Time picker styles */
+        .time-picker-container {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .time-picker-group {
+            flex: 1;
+        }
+
+        .time-picker-input {
+            width: 100%;
+            height: 40px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0.5rem;
+            font-size: 1.25rem;
+            text-align: center;
+            font-weight: 600;
+            color: #006d3a;
+            cursor: pointer;
+        }
+
+        .time-picker-input:focus {
+            outline: none;
+            ring: 2px;
+            ring-color: #006d3a;
+            border-color: #006d3a;
+        }
+
+        .time-picker-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .time-picker-btn {
+            width: 32px;
+            height: 24px;
+            padding: 0;
+            font-size: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            background-color: #f3f4f6;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .time-picker-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .time-picker-btn:active {
+            background-color: #d1d5db;
+        }
+
+        .time-separator {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e293b;
+            align-self: center;
         }
     </style>
 </head>
@@ -262,8 +332,105 @@
                             class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg">
                             <i class="fa-solid fa-arrow-left mr-2"></i> Back
                         </button>
+                        <button type="button" id="next-step-3" class="btn-primary px-6 py-2 rounded-lg">
+                            Next <i class="fa-solid fa-arrow-right ml-2"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Opening and Closing Times (NEW FINAL STEP) -->
+                <div id="step-4" class="form-step hidden">
+                    <p class="mb-6 text-gray-600">Step 4: Set the opening and closing times for this attendance point.</p>
+                    
+                    <!-- Opens At Time Picker -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Opens At</label>
+                        <div class="time-picker-container">
+                            <!-- Hour -->
+                            <div class="time-picker-group">
+                                <div class="time-picker-buttons mb-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="incrementOpensHour()">
+                                        <i class="fa-solid fa-chevron-up text-xs"></i>
+                                    </button>
+                                </div>
+                                <input type="text" id="opens-hour-input" class="time-picker-input" value="09" readonly>
+                                <div class="time-picker-buttons mt-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="decrementOpensHour()">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Separator -->
+                            <div class="time-separator">:</div>
+
+                            <!-- Minute -->
+                            <div class="time-picker-group">
+                                <div class="time-picker-buttons mb-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="incrementOpensMinute()">
+                                        <i class="fa-solid fa-chevron-up text-xs"></i>
+                                    </button>
+                                </div>
+                                <input type="text" id="opens-minute-input" class="time-picker-input" value="00" readonly>
+                                <div class="time-picker-buttons mt-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="decrementOpensMinute()">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Closes At Time Picker -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Closes At</label>
+                        <div class="time-picker-container">
+                            <!-- Hour -->
+                            <div class="time-picker-group">
+                                <div class="time-picker-buttons mb-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="incrementClosesHour()">
+                                        <i class="fa-solid fa-chevron-up text-xs"></i>
+                                    </button>
+                                </div>
+                                <input type="text" id="closes-hour-input" class="time-picker-input" value="09" readonly>
+                                <div class="time-picker-buttons mt-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="decrementClosesHour()">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Separator -->
+                            <div class="time-separator">:</div>
+
+                            <!-- Minute -->
+                            <div class="time-picker-group">
+                                <div class="time-picker-buttons mb-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="incrementClosesMinute()">
+                                        <i class="fa-solid fa-chevron-up text-xs"></i>
+                                    </button>
+                                </div>
+                                <input type="text" id="closes-minute-input" class="time-picker-input" value="00" readonly>
+                                <div class="time-picker-buttons mt-2 flex justify-center">
+                                    <button type="button" class="time-picker-btn" onclick="decrementClosesMinute()">
+                                        <i class="fa-solid fa-chevron-down text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs to store final time values -->
+                    <input type="hidden" id="opens-at-input" name="opensAt">
+                    <input type="hidden" id="closes-at-input" name="closesAt">
+
+                    <div class="mt-6 flex justify-between">
+                        <button type="button" id="back-step-4"
+                            class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg">
+                            <i class="fa-solid fa-arrow-left mr-2"></i> Back
+                        </button>
                         <button type="submit" id="submit-lga-form-btn" class="btn-primary px-6 py-2 rounded-lg">
-                            <i class="fa-solid fa-check mr-2"></i> Submit Point
+                            <i class="fa-solid fa-check mr-2"></i> Create Point
                         </button>
                     </div>
                 </div>
@@ -273,151 +440,6 @@
         </div>
     </div>
     
-    <!-- Edit LGA Modal (Cloned Structure) -->
-    <!-- This modal uses the same underlying structure but with different element IDs to manage state separately -->
-    <div id="lga-edit-modal"
-        class="fixed inset-0 bg-gray-900 bg-opacity-75 z-40 hidden flex items-center justify-center transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6 transition-transform transform scale-95"
-            role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
-
-            <div class="flex justify-between items-start border-b pb-3 mb-4">
-                <h3 id="edit-modal-title" class="text-xl font-bold text-gray-800">Edit LGA Attendance Point</h3>
-                <button id="close-edit-modal-btn" class="text-gray-400 hover:text-gray-600">
-                    <i class="fa-solid fa-xmark text-2xl"></i>
-                </button>
-            </div>
-
-            <form id="edit-lga-form" onsubmit="event.preventDefault(); submitLGAForm(true)">
-                <input type="hidden" id="edit-lga-id-input" name="id">
-
-                <!-- Step 1: Location Selection (Map) -->
-                <div id="edit-step-1" class="form-step">
-                    <p class="mb-4 text-gray-600">Step 1: Select the new attendance location on the map, or **skip** to keep the original.</p>
-                    <div id="edit-map-container" class="mb-4"></div>
-                    <p id="edit-coords-display" class="text-sm font-medium text-gray-700">Coordinaes: Not Selected</p>
-                    <input type="hidden" id="edit-latitude-input" name="latitude">
-                    <input type="hidden" id="edit-longitude-input" name="longitude">
-                    
-                    <!-- Skip/Original Value indicator (Visible for EDIT) -->
-                    <p id="coords-skip-info" class="mt-3 text-sm text-yellow-600">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Current Location: <span id="coords-original-value" class="font-semibold"></span>. Click **Skip** to keep.
-                    </p>
-
-                    <div class="mt-6 flex justify-between">
-                        <button type="button" id="edit-use-current-location-btn"
-                            class="btn-secondary px-4 py-2 rounded-lg font-semibold transition flex items-center">
-                            <i class="fa-solid fa-location-crosshairs mr-2"></i> Use Current Location
-                        </button>
-                        <div>
-                            <button type="button" id="skip-step-1-btn" class="btn-secondary px-4 py-2 rounded-lg mr-2">
-                                <i class="fa-solid fa-forward-step mr-1"></i> Skip
-                            </button>
-                            <button type="button" id="edit-next-step-1" class="btn-primary px-6 py-2 rounded-lg">
-                                Next <i class="fa-solid fa-arrow-right ml-2"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 2: LGA Name Selection (Searchable Dropdown) -->
-                <div id="edit-step-2" class="form-step hidden">
-                    <p class="mb-4 text-gray-600">Step 2: Select a new LGA name, or **skip** to keep the original.</p>
-                    
-                    <div class="relative">
-                        <label for="edit-lga-search-input" class="block text-sm font-medium text-gray-700 mb-2">LGA Name</label>
-                        <!-- Display input for search/selection -->
-                        <input type="text" id="edit-lga-search-input" readonly
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500 transition bg-white cursor-pointer"
-                            placeholder="Click to search and select LGA">
-                        <!-- Hidden input to hold the final value for form submission -->
-                        <input type="hidden" id="edit-lga-hidden-input" name="name">
-
-                        <!-- Searchable Dropdown Container -->
-                        <div id="edit-lga-dropdown-container" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl hidden">
-                            <input type="text" id="edit-lga-filter-input"
-                                class="w-full p-2 border-b border-gray-200 rounded-t-lg focus:outline-none focus:ring-green-500 focus:border-green-500"
-                                placeholder="Type to search all 775 LGAs...">
-                            <!-- Scrollable List Area -->
-                            <div id="edit-lga-list-container" class="max-h-64 overflow-y-auto lga-list-container">
-                                <div class="p-3 text-gray-500 text-sm">Start by clicking the input or typing in the search box above.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <p id="edit-lga-error-msg" class="mt-2 text-sm text-red-500 hidden">Please select an LGA name.</p>
-
-                    <!-- Optional Serial Number Dropdown -->
-                    <div class="mt-4">
-                        <label for="edit-lga-serial-select" class="block text-sm font-medium text-gray-700 mb-2">Optional Serial Number (1-5)</label>
-                        <select id="edit-lga-serial-select" name="serialNumber"
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500 transition">
-                            <option value="">-- None (Primary Point) --</option>
-                            <option value=" 1">1</option>
-                            <option value=" 2">2</option>
-                            <option value=" 3">3</option>
-                            <option value=" 4">4</option>
-                            <option value=" 5">5</option>
-                        </select>
-                        <p class="mt-1 text-xs text-gray-500">The serial number will be appended to the LGA name.</p>
-                    </div>
-
-                    <!-- Skip/Original Value indicator (Visible for EDIT) -->
-                    <p id="edit-lga-skip-info" class="mt-3 text-sm text-yellow-600">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Current Name: <span id="edit-lga-original-value" class="font-semibold"></span>. Click **Skip** to keep.
-                    </p>
-
-
-                    <div class="mt-6 flex justify-between">
-                        <button type="button" id="edit-back-step-2"
-                            class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg">
-                            <i class="fa-solid fa-arrow-left mr-2"></i> Back
-                        </button>
-                        <div>
-                             <button type="button" id="skip-step-2-btn" class="btn-secondary px-4 py-2 rounded-lg mr-2">
-                                <i class="fa-solid fa-forward-step mr-1"></i> Skip
-                            </button>
-                            <button type="button" id="edit-next-step-2" class="btn-primary px-6 py-2 rounded-lg" disabled>
-                                Next <i class="fa-solid fa-arrow-right ml-2"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 3: Distance Setting -->
-                <div id="edit-step-3" class="form-step hidden">
-                    <p class="mb-4 text-gray-600">Step 3: Set the new maximum distance (in meters), or **skip** to keep the original.</p>
-                    <label for="edit-distance-input" class="block text-sm font-medium text-gray-700 mb-2">Distance in Meters</label>
-                    <input type="number" id="edit-distance-input" name="distanceInMeters" min="5" max="5000"
-                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-green-500 focus:border-green-500 transition">
-                    <p class="mt-1 text-xs text-gray-500">This is the maximum radius (in meters) a corp member can be from this point to record attendance.</p>
-                    
-                    <!-- Skip/Original Value indicator (Visible for EDIT) -->
-                    <p id="edit-distance-skip-info" class="mt-3 text-sm text-yellow-600">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Current Distance: <span id="edit-distance-original-value" class="font-semibold"></span>m. Click **Skip** to keep.
-                    </p>
-
-                    <div class="mt-6 flex justify-between">
-                        <button type="button" id="edit-back-step-3"
-                            class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg">
-                            <i class="fa-solid fa-arrow-left mr-2"></i> Back
-                        </button>
-                        <div>
-                             <button type="button" id="skip-step-3-btn" class="btn-secondary px-4 py-2 rounded-lg mr-2">
-                                <i class="fa-solid fa-forward-step mr-1"></i> Skip
-                            </button>
-                            <button type="submit" id="submit-edit-lga-form-btn" class="btn-primary px-6 py-2 rounded-lg">
-                                <i class="fa-solid fa-check mr-2"></i> Update Point
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            </form>
-
-        </div>
-    </div>
-
-
     <!-- JavaScript Logic -->
     <!-- Leaflet JS for Map -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
@@ -431,17 +453,18 @@
         // Frontend URL for corps member portal (relative to the base)
         const CORP_MEMBER_PORTAL_PATH = "/Excoportal/lga/index.html"; 
 
+        // New URL for LGA details page
+        const LGA_DETAILS_PAGE = "LgaDetails.html"; 
+
         // --- State Variables ---
         let currentPage = 1;
         const pageSize = 9; // Display 9 items per page
 
-        // Modal State
-        let currentStep = 1; // 1: Add, 2: Edit
-        let currentMode = 'add'; // 'add' or 'edit'
+        // Modal State (only ADD mode now)
+        let currentStep = 1; // current step within Add modal
         let map;
         let marker;
         let selectedCoords = { lat: null, lng: null }; // For ADD mode
-        let originalLGAData = null; // Stores data for the LGA being edited
 
         // Global LGAs list (Mocking the 775 LGAs)
         const allNigerianLGAs = [
@@ -587,66 +610,42 @@
         const nextStep2Btn = document.getElementById('next-step-2');
         const backStep2Btn = document.getElementById('back-step-2');
         const backStep3Btn = document.getElementById('back-step-3');
+        const nextStep3Btn = document.getElementById('next-step-3'); // Added Step 3 Next Button
+        const backStep4Btn = document.getElementById('back-step-4'); // Added Step 4 Back Button
         const submitLgaFormBtn = document.getElementById('submit-lga-form-btn');
         const lgaForm = document.getElementById('lga-form');
         const addFormSteps = [
             document.getElementById('step-1'),
             document.getElementById('step-2'),
-            document.getElementById('step-3')
+            document.getElementById('step-3'),
+            document.getElementById('step-4')
         ];
         
-        // --- EDIT Modal Elements (New/Cloned IDs) ---
-        const editLgaModal = document.getElementById('lga-edit-modal');
-        const closeEditModalBtn = document.getElementById('close-edit-modal-btn');
-        const editLgaForm = document.getElementById('edit-lga-form');
-        const editLgaIdInput = document.getElementById('edit-lga-id-input');
-        const editFormSteps = [
-            document.getElementById('edit-step-1'),
-            document.getElementById('edit-step-2'),
-            document.getElementById('edit-step-3')
-        ];
-
-        // Step 1 Edit Elements
-        const editCoordsDisplay = document.getElementById('edit-coords-display');
-        const editLatitudeInput = document.getElementById('edit-latitude-input');
-        const editLongitudeInput = document.getElementById('edit-longitude-input');
-        const editNextStep1Btn = document.getElementById('edit-next-step-1');
-        const editUseCurrentLocationBtn = document.getElementById('edit-use-current-location-btn');
-        const coordsSkipInfo = document.getElementById('coords-skip-info');
-        const coordsOriginalValue = document.getElementById('coords-original-value');
-        const skipStep1Btn = document.getElementById('skip-step-1-btn');
-        
-        // Step 2 Edit Elements
-        const editLgaSearchInput = document.getElementById('edit-lga-search-input');
-        const editLgaHiddenInput = document.getElementById('edit-lga-hidden-input');
-        const editLgaDropdownContainer = document.getElementById('edit-lga-dropdown-container');
-        const editLgaFilterInput = document.getElementById('edit-lga-filter-input');
-        const editLgaListContainer = document.getElementById('edit-lga-list-container');
-        const editLgaSerialSelect = document.getElementById('edit-lga-serial-select');
-        const editLgaErrorMsg = document.getElementById('edit-lga-error-msg');
-        const editNextStep2Btn = document.getElementById('edit-next-step-2');
-        const editBackStep2Btn = document.getElementById('edit-back-step-2');
-        const editLgaSkipInfo = document.getElementById('edit-lga-skip-info');
-        const editLgaOriginalValue = document.getElementById('edit-lga-original-value');
-        const skipStep2Btn = document.getElementById('skip-step-2-btn');
-
-        // Step 3 Edit Elements
-        const editDistanceInput = document.getElementById('edit-distance-input');
-        const editBackStep3Btn = document.getElementById('edit-back-step-3');
-        const submitEditLgaFormBtn = document.getElementById('submit-edit-lga-form-btn');
-        const editDistanceSkipInfo = document.getElementById('edit-distance-skip-info');
-        const editDistanceOriginalValue = document.getElementById('edit-distance-original-value');
-        const skipStep3Btn = document.getElementById('skip-step-3-btn');
-
+        // Time input elements
+        const opensHourInput = document.getElementById('opens-hour-input');
+        const opensMinuteInput = document.getElementById('opens-minute-input');
+        const closesHourInput = document.getElementById('closes-hour-input');
+        const closesMinuteInput = document.getElementById('closes-minute-input');
 
         // --- Utility Functions ---
+        
+        /**
+         * Navigates to the LGA details page.
+         * @param {string} lgaId The unique ID of the LGA attendance point.
+         */
+        function viewLgaDetails(lgaId) {
+             window.location.href = `${LGA_DETAILS_PAGE}?id=${lgaId}`;
+        }
+
 
         /**
          * Copies the full URL with the LGA token to the clipboard.
          * The format is: {BASE_URL}{CORP_MEMBER_PORTAL_PATH}?token={token}
          * @param {string} token The unique token for the LGA attendance point.
          */
-        function copyLgaUrl(token) {
+        function copyLgaUrl(token, event) {
+            // Stop propagation to prevent the card click event from firing
+            event.stopPropagation();
             // Construct the full URL
             const fullUrl = `${window.location.origin}?token=${token}`;
             copyToClipboard(fullUrl);
@@ -766,7 +765,7 @@
 
         /**
          * Renders the list of LGA records into the grid, showing coordinates instead of address.
-         * @param {Array<Object>} records LGA records from the API.
+         * Edit button removed to disable editing.
          */
         function renderLGA(records) {
             lgaGrid.innerHTML = ''; // Clear previous content
@@ -781,58 +780,51 @@
                 return;
             }
 
-records.forEach(lga => {
-    // Helper function to safely format coordinates, preventing runtime errors if data is null/undefined/string.
-    const getCoord = (coord) => {
-        // Attempt to parse string to float if necessary, otherwise use the value directly.
-        const value = typeof coord === 'string' ? parseFloat(coord) : coord;
-        
-        // Check if value is a valid number (not null, undefined, or NaN)
-        if (value !== null && typeof value !== 'undefined' && !isNaN(value)) {
-            return value.toFixed(6);
-        }
-        return 'N/A';
-    };
+            records.forEach(lga => {
+                const getCoord = (coord) => {
+                    const value = typeof coord === 'string' ? parseFloat(coord) : coord;
+                    if (value !== null && typeof value !== 'undefined' && !isNaN(value)) {
+                        return value.toFixed(6);
+                    }
+                    return 'N/A';
+                };
 
-    // Calculate coordinates using the robust helper
-    const latitude = getCoord(lga.latitude);
-    const longitude = getCoord(lga.longitude);
-    const coordinates = `Lat: ${latitude}, Lon: ${longitude}`;
-    
-    console.log("Attendance coordinates", coordinates)
+                const latitude = getCoord(lga.latitude);
+                const longitude = getCoord(lga.longitude);
+                const coordinates = `Lat: ${latitude}, Lon: ${longitude}`;
+                
+                console.log("Attendance coordinates", coordinates)
 
-    const card = document.createElement('div');
-    card.className = 'lga-grid-item nysc-card hover:shadow-xl transition relative';
-    card.innerHTML = `
-        <!-- Edit Button -->
-        <button onclick="openEditModal('${lga.id}')" 
-            class="absolute top-3 right-3 text-gray-400 hover:text-blue-600 transition duration-150 p-1 rounded-full bg-gray-50 hover:bg-blue-100"
-            title="Edit LGA Attendance Point">
-            <i class="fa-solid fa-pen-to-square text-sm"></i>
-        </button>
-        <!-- LGA Name (70% height area) -->
-        <div class="space-y-1 pr-8">
-            <h3 class="text-lg font-bold text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap" 
-                title="${lga.name}">${lga.name}
-            </h3>
-            <!-- Token and Copy Button -->
-            <div class="flex items-center space-x-2">
-                <p class="text-xs text-gray-500 font-mono">Token: ${lga.token}</p>
-                <button onclick="copyLgaUrl('${lga.token}')" 
-                    class="text-gray-400 hover:text-green-500 transition duration-150 p-1 rounded-full bg-gray-50 hover:bg-green-100"
-                    title="Copy Corps Member Attendance Link">
-                    <i class="fa-solid fa-copy text-xs"></i>
-                </button>
-            </div>
-            <p class="text-xs text-gray-500">Radius: ${lga.distanceInMeters}m</p>
-        </div>
-        <!-- Coordinates (30% height area) -->
-        <div class="pt-2 border-t border-gray-100 text-sm text-gray-600">
-            <p class="text-xs font-semibold nysc-green-text">Coordinates: ${coordinates}</p>
-        </div>
-    `;
-    lgaGrid.appendChild(card);
-});
+                const card = document.createElement('div');
+                card.className = 'lga-grid-item nysc-card hover:shadow-xl transition relative';
+                
+                // Add click listener to navigate to details page
+                card.addEventListener('click', () => {
+                    viewLgaDetails(lga.id);
+                });
+
+                card.innerHTML = `
+                    <div class="space-y-1 pr-8">
+                        <h3 class="text-lg font-bold text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap" 
+                            title="${lga.name}">${lga.name}
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-xs text-gray-500 font-mono">Token: ${lga.token}</p>
+                            <button onclick="copyLgaUrl('${lga.token}', event)" 
+                                class="text-gray-400 hover:text-green-500 transition duration-150 p-1 rounded-full bg-gray-50 hover:bg-green-100"
+                                title="Copy Corps Member Attendance Link">
+                                <i class="fa-solid fa-copy text-xs"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500">Radius: ${lga.distanceInMeters}m</p>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 text-sm text-gray-600">
+                        <p class="text-xs font-semibold nysc-green-text">Coordinates: ${coordinates}</p>
+                        <p class="text-xs text-gray-500">Time: ${lga.opensAt} - ${lga.closesAt}</p>
+                    </div>
+                `;
+                lgaGrid.appendChild(card);
+            });
         }
 
 
@@ -931,31 +923,22 @@ records.forEach(lga => {
         // --- Reusable Modal Logic ---
 
         /**
-         * Updates the map and form inputs with new coordinates, specific to the current mode.
+         * Updates the map and form inputs with new coordinates (ADD mode only).
          * @param {number} lat Latitude.
          * @param {number} lng Longitude.
          * @param {boolean} isCurrentLocation If the location is from geolocation.
          */
         function updateLocation(lat, lng, isCurrentLocation = false) {
-            const fixedLat = lat.toFixed(6);
-            const fixedLng = lng.toFixed(6);
+            const fixedLat = parseFloat(lat).toFixed(6);
+            const fixedLng = parseFloat(lng).toFixed(6);
             const latlng = [lat, lng];
 
-            // Determine which elements to update based on current mode
-            const currentLatInput = currentMode === 'add' ? latitudeInput : editLatitudeInput;
-            const currentLngInput = currentMode === 'add' ? longitudeInput : editLongitudeInput;
-            const currentCoordsDisplay = currentMode === 'add' ? coordsDisplay : editCoordsDisplay;
-            const currentNextBtn = currentMode === 'add' ? nextStep1Btn : editNextStep1Btn;
-            
-            // Set global state only for ADD mode
-            if (currentMode === 'add') {
-                selectedCoords.lat = parseFloat(fixedLat);
-                selectedCoords.lng = parseFloat(fixedLng);
-            }
-            // For EDIT mode, the presence of these values in the input signals an update.
-            currentLatInput.value = fixedLat;
-            currentLngInput.value = fixedLng;
+            // Always update ADD inputs
+            selectedCoords.lat = parseFloat(fixedLat);
+            selectedCoords.lng = parseFloat(fixedLng);
 
+            latitudeInput.value = fixedLat;
+            longitudeInput.value = fixedLng;
 
             // Center map and remove/add marker
             map.setView(latlng, 13); // Zoom closer on selection
@@ -970,8 +953,8 @@ records.forEach(lga => {
                 .openPopup();
 
             // Update UI
-            currentCoordsDisplay.textContent = `Coordinaes: Lat: ${fixedLat}, Lon: ${fixedLng}`;
-            currentNextBtn.disabled = false;
+            coordsDisplay.textContent = `Coordinaes: Lat: ${fixedLat}, Lon: ${fixedLng}`;
+            nextStep1Btn.disabled = false;
         }
 
         /**
@@ -980,10 +963,8 @@ records.forEach(lga => {
          */
         function onGeolocationSuccess(position) {
             const { latitude, longitude } = position.coords;
-            const btn = currentMode === 'add' ? useCurrentLocationBtn : editUseCurrentLocationBtn;
-            
-            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-2"></i> Use Current Location';
-            btn.disabled = false;
+            useCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-2"></i> Use Current Location';
+            useCurrentLocationBtn.disabled = false;
             updateLocation(latitude, longitude, true);
             showToast("Current location successfully detected and marked.", 'success');
         }
@@ -993,10 +974,8 @@ records.forEach(lga => {
          * @param {Object} error GeolocationPositionError object.
          */
         function onGeolocationError(error) {
-            const btn = currentMode === 'add' ? useCurrentLocationBtn : editUseCurrentLocationBtn;
-            
-            btn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-2"></i> Use Current Location';
-            btn.disabled = false;
+            useCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-2"></i> Use Current Location';
+            useCurrentLocationBtn.disabled = false;
             let message = "Could not get location. ";
             if (error.code === 1) {
                 message += "Access denied. Please enable location services.";
@@ -1009,15 +988,13 @@ records.forEach(lga => {
         }
 
         /**
-         * Initializes the Leaflet map and click handler, specific to the current mode.
-         * @param {number} [lat] Initial latitude.
-         * @param {number} [lng] Initial longitude.
+         * Initializes the Leaflet map (ADD mode only).
          */
         function initMap(lat = 9.0820, lng = 8.6753, zoom = 6) {
-            const mapContainerId = currentMode === 'add' ? 'map-container' : 'edit-map-container';
+            const mapContainerId = 'map-container';
 
             if (map) {
-                map.remove(); // Remove existing map instance if it exists
+                map.remove();
                 marker = null;
             }
             
@@ -1045,33 +1022,27 @@ records.forEach(lga => {
         }
 
         /**
-         * Initializes the searchable LGA list state for the current mode.
+         * Initializes the searchable LGA list state for ADD mode.
          */
         function loadLGAOptions() {
-            const searchInput = currentMode === 'add' ? lgaSearchInput : editLgaSearchInput;
-            const hiddenInput = currentMode === 'add' ? lgaHiddenInput : editLgaHiddenInput;
-            const filterInput = currentMode === 'add' ? lgaFilterInput : editLgaFilterInput;
-            const nextBtn = currentMode === 'add' ? nextStep2Btn : editNextStep2Btn;
-
-            searchInput.value = ''; // Reset display
-            hiddenInput.value = ''; // Reset hidden value
-            filterInput.value = ''; // Reset filter input
-            nextBtn.disabled = currentMode === 'add' ? true : false; // Enable next if in EDIT mode (to allow skip)
+            lgaSearchInput.value = ''; // Reset display
+            lgaHiddenInput.value = ''; // Reset hidden value
+            lgaFilterInput.value = ''; // Reset filter input
+            nextStep2Btn.disabled = true;
             filterLGAs(''); // Initial population of the list
         }
         
         /**
-         * Filters the LGA list based on search input and updates the display (reusable).
+         * Filters the LGA list based on search input and updates the display (ADD mode).
          * @param {string} searchTerm The text to search for.
          */
         function filterLGAs(searchTerm) {
-            const listContainer = currentMode === 'add' ? lgaListContainer : editLgaListContainer;
-            const searchInput = currentMode === 'add' ? lgaSearchInput : editLgaSearchInput;
-            const hiddenInput = currentMode === 'add' ? lgaHiddenInput : editLgaHiddenInput;
-            const dropdownContainer = currentMode === 'add' ? lgaDropdownContainer : editLgaDropdownContainer;
-            const nextBtn = currentMode === 'add' ? nextStep2Btn : editNextStep2Btn;
-            const errorMsg = currentMode === 'add' ? lgaErrorMsg : editLgaErrorMsg;
-
+            const listContainer = lgaListContainer;
+            const searchInputEl = lgaSearchInput;
+            const hiddenInput = lgaHiddenInput;
+            const dropdownContainer = lgaDropdownContainer;
+            const nextBtn = nextStep2Btn;
+            const errorMsg = lgaErrorMsg;
 
             listContainer.innerHTML = ''; // Clear previous results
             
@@ -1095,7 +1066,7 @@ records.forEach(lga => {
                 
                 // Add click listener to select the LGA
                 item.addEventListener('click', () => {
-                    searchInput.value = lga;      // Update visible field
+                    searchInputEl.value = lga;      // Update visible field
                     hiddenInput.value = lga;      // Update hidden field for submission
                     dropdownContainer.classList.add('hidden'); // Hide dropdown
                     nextBtn.disabled = false;   // Enable next step
@@ -1111,13 +1082,10 @@ records.forEach(lga => {
          * Opens the ADD modal and resets the form to Step 1.
          */
         function openAddModal() {
-            currentMode = 'add';
             lgaModal.classList.remove('hidden');
-            editLgaModal.classList.add('hidden'); // Ensure edit modal is hidden
-
             currentStep = 1;
             updateStepVisibility();
-            
+
             // Reset form state on open
             lgaForm.reset();
             selectedCoords = { lat: null, lng: null };
@@ -1128,15 +1096,18 @@ records.forEach(lga => {
             nextStep2Btn.disabled = true;
             lgaErrorMsg.classList.add('hidden');
             
-            // Hide skip info elements for ADD mode
-            document.getElementById('lga-skip-info').classList.add('hidden');
-            document.getElementById('distance-skip-info').classList.add('hidden');
-
+            // Reset time pickers to default (09:00)
+            opensHourInput.value = '09';
+            opensMinuteInput.value = '00';
+            closesHourInput.value = '09';
+            closesMinuteInput.value = '00';
+            document.getElementById('opens-at-input').value = '';
+            document.getElementById('closes-at-input').value = '';
 
             // Re-initialize map to ensure it renders correctly inside the modal
             setTimeout(() => {
                 initMap();
-                if (map) map.invalidateSize(); // Fixes rendering issues when modal opens
+                if (map) map.invalidateSize();
             }, 100);
         }
 
@@ -1149,102 +1120,13 @@ records.forEach(lga => {
             if (marker) map.removeLayer(marker);
             marker = null;
         }
-        
-        /**
-         * Fetches LGA data for editing and opens the EDIT modal.
-         * @param {string} id The ID of the LGA to edit.
-         */
-        async function openEditModal(id) {
-            const token = getValidToken();
-            if (!token) return;
-
-            showToast("Fetching LGA data...", 'success');
-            
-            try {
-                const response = await fetch(`${LGA_ENDPOINT}/${id}`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch LGA data for editing.");
-                }
-
-                const data = await response.json();
-                if (data.status !== true || !data.value) {
-                    throw new Error(data.message || "Invalid LGA data received.");
-                }
-                
-                originalLGAData = data.value;
-                currentMode = 'edit';
-                lgaModal.classList.add('hidden'); // Ensure add modal is hidden
-                editLgaModal.classList.remove('hidden');
-
-                // Reset and populate form for editing
-                editLgaForm.reset();
-                editLgaIdInput.value = id;
-                currentStep = 1;
-                updateStepVisibility();
-                
-                // Initialize map with current location
-                const lat = originalLGAData.latitude;
-                const lng = originalLGAData.longitude;
-                const zoom = 13;
-                
-                setTimeout(() => {
-                    initMap(lat, lng, zoom);
-                    if (map) map.invalidateSize();
-                    
-                    // Add initial marker
-                    marker = L.marker([lat, lng]).addTo(map)
-                        .bindPopup("Original Location")
-                        .openPopup();
-                }, 100);
-                
-                // Set original values for visual cues and skip logic
-                coordsOriginalValue.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-                editLgaOriginalValue.textContent = originalLGAData.name;
-                editDistanceOriginalValue.textContent = originalLGAData.distanceInMeters;
-
-                // Reset temporary inputs for Step 1
-                editLatitudeInput.value = ''; // Empty means skip
-                editLongitudeInput.value = ''; // Empty means skip
-                editCoordsDisplay.textContent = `Coordinaes: Not Selected (Original: ${lat.toFixed(6)}, ${lng.toFixed(6)})`;
-                editNextStep1Btn.disabled = false; // Always enabled for Edit/Skip
-
-                // Reset temporary inputs for Step 2
-                editLgaSearchInput.value = '';
-                editLgaHiddenInput.value = ''; // Empty means skip
-                editLgaSerialSelect.value = ''; // Empty means skip
-                editNextStep2Btn.disabled = false; // Always enabled for Edit/Skip
-
-                // Reset temporary inputs for Step 3
-                editDistanceInput.value = ''; // Empty means skip
-
-
-            } catch (error) {
-                console.error("Error fetching LGA data for edit:", error);
-                showToast(error.message || "Failed to load LGA data for editing.", 'error');
-            }
-        }
-        
-        /**
-         * Closes the EDIT modal and resets state.
-         */
-        function closeEditModal() {
-            editLgaModal.classList.add('hidden');
-            editLgaForm.reset();
-            originalLGAData = null;
-            if (marker) map.removeLayer(marker);
-            marker = null;
-        }
 
         /**
-         * Updates which step of the form is visible (based on currentMode).
+         * Updates which step of the form is visible (ADD mode).
          */
         function updateStepVisibility() {
-            const steps = currentMode === 'add' ? addFormSteps : editFormSteps;
-            
+            const steps = addFormSteps;
+
             steps.forEach((step, index) => {
                 if (index === currentStep - 1) {
                     step.classList.remove('hidden');
@@ -1252,7 +1134,7 @@ records.forEach(lga => {
                     step.classList.add('hidden');
                 }
             });
-            
+
             // Re-render map if it becomes visible
             if (currentStep === 1 && map) {
                 setTimeout(() => map.invalidateSize(), 50);
@@ -1263,38 +1145,22 @@ records.forEach(lga => {
          * Moves to the next step, handling any step-specific setup.
          */
         function nextStep() {
-            // Determine which elements to use
-            const hiddenInput = currentMode === 'add' ? lgaHiddenInput : editLgaHiddenInput;
-            const errorMsg = currentMode === 'add' ? lgaErrorMsg : editLgaErrorMsg;
-            const nextBtn = currentMode === 'add' ? nextStep2Btn : editNextStep2Btn;
-            
             if (currentStep === 1) {
-                // ADD Mode Validation
-                if (currentMode === 'add' && (!selectedCoords.lat || !selectedCoords.lng)) return;
-                
-                // EDIT Mode: Location can be skipped, so no mandatory validation needed here.
-                
-                // Load LGA options for Step 2
-                loadLGAOptions(); 
-                
+                // ADD Mode Validation: ensure coords selected
+                if (!selectedCoords.lat || !selectedCoords.lng) return;
+                loadLGAOptions();
             } else if (currentStep === 2) {
                 // ADD Mode Validation: LGA name is mandatory
-                if (currentMode === 'add' && !hiddenInput.value) {
-                    errorMsg.classList.remove('hidden');
+                if (!lgaHiddenInput.value) {
+                    lgaErrorMsg.classList.remove('hidden');
                     return;
                 }
-                
-                // EDIT Mode Validation: If they typed something, it must be selected
-                if (currentMode === 'edit' && editLgaFilterInput.value && !hiddenInput.value) {
-                     errorMsg.classList.remove('hidden');
-                     return;
-                }
-                
-                // If they are in edit mode and the input is empty, they are skipping (valid).
-                errorMsg.classList.add('hidden');
+                lgaErrorMsg.classList.add('hidden');
+            } else if (currentStep === 3) {
+                // Step 3 validation: distance is already required by HTML, just proceed
             }
 
-            if (currentStep < 3) { // Max 3 steps
+            if (currentStep < 4) {
                 currentStep++;
                 updateStepVisibility();
             }
@@ -1304,144 +1170,154 @@ records.forEach(lga => {
          * Moves to the previous step.
          */
         function prevStep() {
-            if (currentMode === 'add') {
-                if (currentStep === 2) {
-                    // Reset LGA selection state when going back from Step 2 (ADD mode)
-                    lgaSearchInput.value = '';
-                    lgaHiddenInput.value = '';
-                    nextStep2Btn.disabled = true;
-                    lgaErrorMsg.classList.add('hidden');
-                }
-            } else { // EDIT mode
-                if (currentStep === 2) {
-                    // Reset LGA selection state when going back from Step 2 (EDIT mode)
-                    editLgaSearchInput.value = '';
-                    editLgaHiddenInput.value = '';
-                    editLgaSerialSelect.value = '';
-                    editLgaErrorMsg.classList.add('hidden');
-                } else if (currentStep === 3) {
-                     editDistanceInput.value = ''; // Reset input to force skip on return
-                }
+            if (currentStep === 2) {
+                // Reset LGA selection state when going back from Step 2 (ADD mode)
+                lgaSearchInput.value = '';
+                lgaHiddenInput.value = '';
+                nextStep2Btn.disabled = true;
+                lgaErrorMsg.classList.add('hidden');
+            } else if (currentStep === 3) {
+                // document.getElementById('distance-input').value = '50'; // reset default if needed
             }
-            
+
             if (currentStep > 1) {
                 currentStep--;
                 updateStepVisibility();
             }
         }
         
+        // --- Time Picker Logic ---
+
         /**
-         * Handles the skip action for a step in EDIT mode.
+         * Helper function to safely update hour or minute input with wrapping/clamping.
+         * @param {string} inputId The ID of the input element.
+         * @param {number} delta +1 for increment, -1 for decrement.
+         * @param {number} max The maximum allowed value (e.g., 23 for hour, 59 for minute).
+         * @param {boolean} isHour If true, handles hour formatting (H), otherwise minute (MM).
          */
-        function skipStep() {
-            // Clear inputs for the current step to ensure they are skipped in the final payload
-            if (currentMode === 'edit') {
-                if (currentStep === 1) {
-                    editLatitudeInput.value = '';
-                    editLongitudeInput.value = '';
-                    // No validation needed, just move forward
-                } else if (currentStep === 2) {
-                    editLgaHiddenInput.value = '';
-                    editLgaSerialSelect.value = '';
-                    // No validation needed, just move forward
-                } else if (currentStep === 3) {
-                    editDistanceInput.value = '';
-                    // No validation needed, just move forward/submit
-                }
+        function updateTimeInput(inputId, delta, max, isHour = false) {
+            const inputEl = document.getElementById(inputId);
+            let currentValue = parseInt(inputEl.value, 10);
+            let newValue = currentValue + delta;
+
+            if (isHour) {
+                // Hours (0-23)
+                if (newValue < 0) newValue = 23;
+                if (newValue > 23) newValue = 0;
+            } else {
+                // Minutes (0-59), wraps in steps of 5
+                const step = 5;
+                newValue = Math.round(newValue / step) * step;
+
+                if (newValue < 0) newValue = 55;
+                if (newValue > 59) newValue = 0;
             }
-            nextStep();
+
+            // Format: H or HH for hours, MM for minutes
+            inputEl.value = isHour ? String(newValue).padStart(2, '0') : String(newValue).padStart(2, '0');
+        }
+
+        // Opens At Time Controls
+        function incrementOpensHour() { updateTimeInput('opens-hour-input', 1, 23, true); }
+        function decrementOpensHour() { updateTimeInput('opens-hour-input', -1, 23, true); }
+        function incrementOpensMinute() { updateTimeInput('opens-minute-input', 5, 59, false); }
+        function decrementOpensMinute() { updateTimeInput('opens-minute-input', -5, 59, false); }
+
+        // Closes At Time Controls
+        function incrementClosesHour() { updateTimeInput('closes-hour-input', 1, 23, true); }
+        function decrementClosesHour() { updateTimeInput('closes-hour-input', -1, 23, true); }
+        function incrementClosesMinute() { updateTimeInput('closes-minute-input', 5, 59, false); }
+        function decrementClosesMinute() { updateTimeInput('closes-minute-input', -5, 59, false); }
+
+        /**
+         * Formats the Opens At time to the required "H:MM" string.
+         * @returns {string} Formatted time string.
+         */
+        function getOpensTime() {
+            // Remove leading zero from hour if it's 0-9
+            let hour = parseInt(opensHourInput.value, 10);
+            const minute = opensMinuteInput.value;
+            return `${hour}:${minute}`;
+        }
+
+        /**
+         * Formats the Closes At time to the required "H:MM" string.
+         * @returns {string} Formatted time string.
+         */
+        function getClosesTime() {
+            // Remove leading zero from hour if it's 0-9
+            let hour = parseInt(closesHourInput.value, 10);
+            const minute = closesMinuteInput.value;
+            return `${hour}:${minute}`;
         }
 
 
         /**
-         * Handles the final form submission for both create (POST) and update (PUT).
-         * @param {boolean} isEdit True if in edit mode (PUT request), false for add (POST).
+         * Handles the final form submission for CREATE (POST) only.
          */
-        async function submitLGAForm(isEdit = false) {
+        async function submitLGAForm() {
             const token = getValidToken();
             if (!token) return;
 
-            // Determine elements and endpoint based on mode
-            let form, submitBtn, endpoint, method, successMessage;
-
-            if (isEdit) {
-                form = editLgaForm;
-                submitBtn = submitEditLgaFormBtn;
-                endpoint = `${LGA_ENDPOINT}/${editLgaIdInput.value}`;
-                method = 'PATCH';
-                successMessage = "LGA Attendance Point updated successfully!";
-            } else {
-                form = lgaForm;
-                submitBtn = submitLgaFormBtn;
-                endpoint = LGA_ENDPOINT;
-                method = 'POST';
-                successMessage = "LGA Attendance Point created successfully!";
-            }
-
-            // Start loading state
+            const submitBtn = submitLgaFormBtn;
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Submitting...';
             submitBtn.disabled = true;
-            
-            // --- Build Payload ---
+
+            // Build payload (ADD only)
             let payload = {};
+            const baseName = lgaHiddenInput.value;
+            const serialNumber = lgaSerialSelect.value;
+
+            if (!baseName) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                // This shouldn't happen if validation in Step 2 is correct, but added as a safeguard
+                return showToast("Please select an LGA name (Step 2).", 'error'); 
+            }
+            payload.name = baseName + serialNumber;
+
+            const latValue = latitudeInput.value;
+            const lngValue = longitudeInput.value;
+            if (!latValue || !lngValue) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                 // This shouldn't happen if validation in Step 1 is correct, but added as a safeguard
+                return showToast("Please select a location on the map (Step 1).", 'error'); 
+            }
+            payload.latitude = parseFloat(latValue);
+            payload.longitude = parseFloat(lngValue);
+
+            const distanceValue = document.getElementById('distance-input').value;
+            if (!distanceValue) {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                 // This shouldn't happen if validation in Step 3 is correct, but added as a safeguard
+                return showToast("Please set a distance (Step 3).", 'error'); 
+            }
+            payload.distanceInMeters = parseInt(distanceValue, 10);
+
+            // Add opening and closing times (Step 4 data)
+            const opensAt = getOpensTime();
+            const closesAt = getClosesTime();
+
+            // Perform simple time validation (Opens At must be before Closes At)
+            const opensTimeValue = parseInt(opensHourInput.value, 10) * 60 + parseInt(opensMinuteInput.value, 10);
+            const closesTimeValue = parseInt(closesHourInput.value, 10) * 60 + parseInt(closesMinuteInput.value, 10);
             
-            // 1. Name/LGA logic
-            const baseName = isEdit ? editLgaHiddenInput.value : lgaHiddenInput.value;
-            const serialNumber = isEdit ? editLgaSerialSelect.value : lgaSerialSelect.value;
-            
-            // POST (Add) mode requires name to be set
-            if (!isEdit && !baseName) {
+            if (closesTimeValue <= opensTimeValue) {
                  submitBtn.innerHTML = originalText;
                  submitBtn.disabled = false;
-                 return showToast("Please select an LGA name (Step 2).", 'error');
+                 return showToast("Closing time must be after opening time.", 'error');
             }
 
-            if (baseName || !isEdit) { // If a new name is selected (or if in ADD mode)
-                 payload.name = baseName + serialNumber;
-            }
-            
-            // 2. Coordinate logic
-            const latValue = isEdit ? editLatitudeInput.value : latitudeInput.value;
-            const lngValue = isEdit ? editLongitudeInput.value : longitudeInput.value;
-            
-            // POST (Add) mode requires coordinates to be set
-            if (!isEdit && (!latValue || !lngValue)) {
-                 submitBtn.innerHTML = originalText;
-                 submitBtn.disabled = false;
-                 return showToast("Please select a location on the map (Step 1).", 'error');
-            }
 
-            if (latValue && lngValue) { // If new coordinates are selected (or if in ADD mode)
-                payload.latitude = parseFloat(latValue);
-                payload.longitude = parseFloat(lngValue);
-            }
+            payload.opensAt = opensAt;
+            payload.closesAt = closesAt;
 
-            // 3. Distance logic
-            const distanceInput = isEdit ? editDistanceInput : document.getElementById('distance-input');
-            const distanceValue = distanceInput.value;
-            
-            // POST (Add) mode requires distance to be set
-            if (!isEdit && !distanceValue) {
-                 submitBtn.innerHTML = originalText;
-                 submitBtn.disabled = false;
-                 return showToast("Please set a distance (Step 3).", 'error');
-            }
-
-            if (distanceValue) { // If a new distance is set (or if in ADD mode)
-                 payload.distanceInMeters = parseInt(distanceValue, 10);
-            }
-            
-            // 4. Final check for EDIT mode: must update at least one field
-            if (isEdit && Object.keys(payload).length === 0) {
-                 submitBtn.innerHTML = originalText;
-                 submitBtn.disabled = false;
-                 return showToast("No changes detected. Update at least one field to submit.", 'error');
-            }
-            
             try {
-                const response = await fetch(endpoint, {
-                    method: method,
+                const response = await fetch(LGA_ENDPOINT, {
+                    method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -1452,15 +1328,13 @@ records.forEach(lga => {
                 const data = await response.json();
 
                 if (response.ok && data.status === true) {
-                    showToast(successMessage, 'success');
-                    if (isEdit) {
-                        closeEditModal();
-                    } else {
-                        closeAddModal();
-                    }
-                    fetchLGAData(searchInput.value, currentPage); // Refresh data
+                    showToast("LGA Attendance Point created successfully!", 'success');
+                    closeAddModal();
+                    // Reset to first page of data to see the new entry
+                    currentPage = 1; 
+                    fetchLGAData(searchInput.value, currentPage);
                 } else {
-                    throw new Error(data.message || `Failed to process LGA point. Status: ${response.status}`);
+                    throw new Error(data.message || `Failed to create LGA point. Status: ${response.status}`);
                 }
             } catch (error) {
                 console.error("Error submitting LGA data:", error);
@@ -1473,13 +1347,11 @@ records.forEach(lga => {
 
 
         // --- Event Handlers ---
-
-        // Geolocation button handler (reusable)
+        // Geolocation button handler
         function handleGeolocationClick() {
             if (navigator.geolocation) {
-                const btn = currentMode === 'add' ? useCurrentLocationBtn : editUseCurrentLocationBtn;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Locating...';
-                btn.disabled = true;
+                useCurrentLocationBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Locating...';
+                useCurrentLocationBtn.disabled = true;
                 navigator.geolocation.getCurrentPosition(onGeolocationSuccess, onGeolocationError, {
                     enableHighAccuracy: true,
                     timeout: 10000,
@@ -1490,8 +1362,6 @@ records.forEach(lga => {
             }
         }
         useCurrentLocationBtn.addEventListener('click', handleGeolocationClick);
-        editUseCurrentLocationBtn.addEventListener('click', handleGeolocationClick);
-
 
         // Pagination buttons
         prevPageBtn.addEventListener('click', () => {
@@ -1500,7 +1370,6 @@ records.forEach(lga => {
                 fetchLGAData(searchInput.value, currentPage);
             }
         });
-
         nextPageBtn.addEventListener('click', () => {
             currentPage++;
             fetchLGAData(searchInput.value, currentPage);
@@ -1510,9 +1379,9 @@ records.forEach(lga => {
         searchInput.addEventListener('input', (e) => {
             clearTimeout(fetchTimeout);
             fetchTimeout = setTimeout(() => {
-                currentPage = 1; // Reset to first page on new search
+                currentPage = 1;
                 fetchLGAData(e.target.value, currentPage);
-            }, 500); // 500ms debounce delay
+            }, 500);
         });
 
         // Logout button
@@ -1521,15 +1390,9 @@ records.forEach(lga => {
         // Modal Open/Close
         addLgaBtn.addEventListener('click', openAddModal);
         closeModalBtn.addEventListener('click', closeAddModal);
-        closeEditModalBtn.addEventListener('click', closeEditModal);
         lgaModal.addEventListener('click', (e) => {
             if (e.target === lgaModal) {
                 closeAddModal();
-            }
-        });
-        editLgaModal.addEventListener('click', (e) => {
-            if (e.target === editLgaModal) {
-                closeEditModal();
             }
         });
 
@@ -1538,91 +1401,50 @@ records.forEach(lga => {
         backStep2Btn.addEventListener('click', prevStep);
         nextStep2Btn.addEventListener('click', nextStep);
         backStep3Btn.addEventListener('click', prevStep);
-        
-        // Modal Navigation (EDIT Mode)
-        editNextStep1Btn.addEventListener('click', nextStep);
-        editBackStep2Btn.addEventListener('click', prevStep);
-        editNextStep2Btn.addEventListener('click', nextStep);
-        editBackStep3Btn.addEventListener('click', prevStep);
-        
-        // Skip Buttons (EDIT Mode)
-        skipStep1Btn.addEventListener('click', skipStep);
-        skipStep2Btn.addEventListener('click', skipStep);
-        skipStep3Btn.addEventListener('click', skipStep);
+        nextStep3Btn.addEventListener('click', nextStep); // Connect Step 3 to Step 4
+        backStep4Btn.addEventListener('click', prevStep); // Back from Step 4
 
-        // --- LGA SEARCH COMPONENT HANDLERS (Re-use logic for both modals) ---
-        
-        // Generic function to set up listeners for a searchable input
+        // --- LGA SEARCH COMPONENT HANDLERS (ADD only) ---
         function setupSearchableLGAInput(searchInputEl, filterInputEl, dropdownContainerEl) {
-            // 1. Show dropdown when the search input is clicked
             searchInputEl.addEventListener('click', () => {
                 dropdownContainerEl.classList.remove('hidden');
                 filterInputEl.focus();
-                filterLGAs(filterInputEl.value); // Initial population
+                filterLGAs(filterInputEl.value);
             });
-
-            // 2. Filter on keystroke (real-time filtering)
             filterInputEl.addEventListener('keyup', (e) => {
                 filterLGAs(e.target.value);
             });
         }
-        
-        // Apply setup to ADD modal
+        // Apply setup to ADD modal only
         setupSearchableLGAInput(lgaSearchInput, lgaFilterInput, lgaDropdownContainer);
-        
-        // Apply setup to EDIT modal
-        setupSearchableLGAInput(editLgaSearchInput, editLgaFilterInput, editLgaDropdownContainer);
 
-        // 3. Hide dropdown when clicking outside (reusable listener)
+        // Hide dropdown when clicking outside
         document.addEventListener('click', (e) => {
-            // Check if the click is outside BOTH dropdown containers and their trigger inputs
             const isClickOutsideAdd = !lgaDropdownContainer.contains(e.target) && e.target !== lgaSearchInput && e.target !== lgaFilterInput;
-            const isClickOutsideEdit = !editLgaDropdownContainer.contains(e.target) && e.target !== editLgaSearchInput && e.target !== editLgaFilterInput;
-            
             if (isClickOutsideAdd) {
                 lgaDropdownContainer.classList.add('hidden');
             }
-            if (isClickOutsideEdit) {
-                editLgaDropdownContainer.classList.add('hidden');
-            }
         });
 
-        // 4. Input change handler (for visual changes, although clicks handle the value)
+        // LGA input changes
         function handleLGAInputChange() {
-            const hiddenInput = currentMode === 'add' ? lgaHiddenInput : editLgaHiddenInput;
-            const nextBtn = currentMode === 'add' ? nextStep2Btn : editNextStep2Btn;
-            const errorMsg = currentMode === 'add' ? lgaErrorMsg : editLgaErrorMsg;
+            const hiddenInput = lgaHiddenInput;
+            const nextBtn = nextStep2Btn;
+            const errorMsg = lgaErrorMsg;
 
-            // In ADD mode, selection is required to proceed
-            if (currentMode === 'add') {
-                if (hiddenInput.value) {
-                    nextBtn.disabled = false;
-                    errorMsg.classList.add('hidden');
-                } else {
-                    nextBtn.disabled = true;
-                }
-            } 
-            // In EDIT mode, the button is always enabled due to the 'Skip' option, 
-            // but we still clear the error if something is selected.
-             if (currentMode === 'edit' && hiddenInput.value) {
-                 errorMsg.classList.add('hidden');
-             }
+            if (hiddenInput.value) {
+                nextBtn.disabled = false;
+                errorMsg.classList.add('hidden');
+            } else {
+                nextBtn.disabled = true;
+            }
         }
-        
-        // Listeners for both LGA search inputs
         lgaSearchInput.addEventListener('change', handleLGAInputChange);
-        editLgaSearchInput.addEventListener('change', handleLGAInputChange);
-
-
-        // Expose functions globally for use in HTML onclick handlers
-        window.copyLgaUrl = copyLgaUrl;
-        window.openEditModal = openEditModal; // Expose edit function
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Initial auth check is inside getValidToken() called by fetchLGAData
             if (getValidToken()) {
-                fetchLGAData(); // Load first page of data
+                fetchLGAData();
             }
         });
     </script>

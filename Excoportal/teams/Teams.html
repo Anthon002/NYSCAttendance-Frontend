@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYSC Admin - Team Management</title>
+    <!-- Tailwind CSS for Layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            /* Light Slate Blue/Gray */
+            color: #1e293b;
+        }
+
+        .nysc-green-bg {
+            background-color: #006d3a;
+        }
+
+        .nysc-green-text {
+            color: #006d3a;
+        }
+
+        .nysc-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Custom scrollbar for table container */
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .permission-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            margin-right: 4px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background-color: #f0f9ff;
+            /* Blue 50 */
+            color: #0c4a6e;
+            /* Blue 900 */
+            border: 1px solid #bae6fd;
+            /* Blue 200 */
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <!-- Header/Navigation -->
+    <header class="nysc-green-bg text-white shadow-lg">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+            <h1 class="text-xl sm:text-2xl font-bold">NYSC Admin Dashboard</h1>
+            <div class="flex items-center space-x-4 justify-end">
+                <span class="text-sm font-medium">Welcome, Admin</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header & Action Button -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-800">
+                Team Management
+            </h2>
+            <!-- Add User Button -->
+            <button id="add-user-btn" onclick="openAddModal()"
+                class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                <i class="fa-solid fa-user-plus mr-2"></i> Add New Member
+            </button>
+        </div>
+        <p class="mb-8 text-gray-500 text-sm">Manage administrative team members and their privileges.</p>
+
+
+        <!-- Team Member List Section -->
+        <div class="nysc-card p-6">
+            <h3 class="text-xl font-bold border-b pb-3 mb-6 nysc-green-text flex items-center">
+                <i class="fa-solid fa-users-gear mr-2"></i> Current Team Members
+            </h3>
+
+            <!-- Filter and Search Controls -->
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <!-- Search Input -->
+                <div class="w-full md:w-1/3 relative">
+                    <input type="text" id="filter-search" placeholder="Search by Name or Email"
+                        class="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green text-sm">
+                    <i
+                        class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                </div>
+                <!-- Page Size Selector -->
+                <div class="flex items-center space-x-2">
+                    <label for="page-size-select" class="text-sm text-gray-700">Records per page:</label>
+                    <select id="page-size-select" onchange="setPageSize(this.value)"
+                        class="p-2 border border-gray-300 rounded-lg text-sm">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Table Container (Horizontal Scroll on Mobile) -->
+            <div class="table-container overflow-x-auto relative shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500 min-w-[700px]">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Member Name</th>
+                            <th scope="col" class="px-6 py-3">Email</th>
+                            <th scope="col" class="px-6 py-3">User Type</th>
+                            <th scope="col" class="px-6 py-3">Permissions</th>
+                            <th scope="col" class="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="team-members-body">
+                        <!-- Records will be injected here -->
+                        <tr id="initial-table-message" class="bg-white border-b">
+                            <td colspan="5" class="px-6 py-4 text-center text-gray-400">
+                                Loading team members...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Loading/Empty State Overlay -->
+                <div id="team-loading-overlay"
+                    class="absolute inset-0 bg-white bg-opacity-70 flex justify-center items-center hidden">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl nysc-green-text"></i>
+                </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mt-6 space-y-4 sm:space-y-0">
+                <div class="text-sm text-gray-700 order-3 sm:order-1" id="pagination-summary">
+                    Showing 0 to 0 of 0 records
+                </div>
+
+                <!-- Navigation Buttons -->
+                <nav class="flex items-center space-x-2 order-1 sm:order-2">
+                    <button id="prev-page-btn" onclick="goToPage(teamState.pageNumber - 1)"
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                        disabled>
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+
+                    <span id="page-number-display" class="text-sm font-semibold text-gray-700">Page 1 of 1</span>
+
+                    <button id="next-page-btn" onclick="goToPage(teamState.pageNumber + 1)"
+                        class="px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                        disabled>
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </nav>
+            </div>
+
+        </div>
+        <!-- End Team Member List Section -->
+
+    </main>
+
+    <!-- Add New Member Modal (Hidden by default) -->
+    <div id="add-modal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl sm:text-2xl font-bold nysc-green-text">Add New Team Member</h3>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form id="add-member-form" class="space-y-4">
+
+                    <div>
+                        <label for="add-first-name" class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                        <input type="text" id="add-first-name" required
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                    </div>
+
+                    <div>
+                        <label for="add-last-name" class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                        <input type="text" id="add-last-name" required
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                    </div>
+
+                    <div>
+                        <label for="add-middle-name" class="block text-sm font-medium text-gray-700 mb-1">Middle Name
+                            (Optional)</label>
+                        <input type="text" id="add-middle-name"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                    </div>
+
+                    <div>
+                        <label for="add-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="add-email" required
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-nysc-green focus:border-nysc-green">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Privileges/Permissions</label>
+                        <p class="text-xs text-gray-500 mb-3">Unchecking all means the user can view but not edit or create.</p>
+                        <div id="add-permissions-list" class="space-y-2">
+                            <!-- Checkboxes will be dynamically inserted here -->
+                        </div>
+                    </div>
+
+                    <button type="submit" id="add-member-submit-btn"
+                        class="w-full nysc-green-bg text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 flex items-center justify-center">
+                        <i class="fa-solid fa-plus mr-2"></i>
+                        <span>Add Member</span>
+                    </button>
+                    <div id="add-loading-status" class="text-center mt-4 hidden">
+                        <i class="fa-solid fa-spinner fa-spin nysc-green-text text-xl"></i>
+                        <p class="text-sm text-gray-500 mt-2">Adding new team member...</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- End Add New Member Modal -->
+
+    <!-- Update Permissions Modal (Hidden by default) -->
+    <div id="update-modal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl sm:text-2xl font-bold nysc-green-text">Update Permissions for <span
+                        id="update-member-name" class="font-bold text-blue-600"></span></h3>
+                <button onclick="closeUpdateModal()" class="text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <form id="update-permissions-form" class="space-y-4">
+                    <input type="hidden" id="update-member-id">
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Assign/Unassign Privileges</label>
+                        <p class="text-xs text-gray-500 mb-3">Check to assign, uncheck to unassign.</p>
+                        <div id="update-permissions-list" class="space-y-2">
+                            <!-- Checkboxes will be dynamically inserted here -->
+                        </div>
+                    </div>
+
+                    <button type="submit" id="update-permissions-submit-btn"
+                        class="w-full bg-indigo-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 flex items-center justify-center">
+                        <i class="fa-solid fa-save mr-2"></i>
+                        <span>Save Permissions</span>
+                    </button>
+                    <div id="update-loading-status" class="text-center mt-4 hidden">
+                        <i class="fa-solid fa-spinner fa-spin nysc-green-text text-xl"></i>
+                        <p class="text-sm text-gray-500 mt-2">Updating permissions...</p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- End Update Permissions Modal -->
+
+    <!-- Toast Notification Container (Top Right) -->
+    <div id="toast-container"
+        class="max-w-xs w-full fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300">
+        <!-- Toast content is injected here -->
+    </div>
+
+
+    <!-- JavaScript Logic -->
+    <script>
+        // --- Configuration ---
+        const BASE_URL = "https://nyscattendance.somee.com";
+        const TEAMS_ENDPOINT = `${BASE_URL}/api/Admin/Teams`;
+        const TOAST_DURATION = 3000;
+
+        // Permissions available for assignment
+        const AVAILABLE_PERMISSIONS = {
+            'lga-management': 'Manage LGA Locations',
+            'team-management': 'Manage Admins', // Added a third permission for realism/flexibility
+            // NOTE: Only 'lga-management' is explicitly required by the prompt, but it was listed twice. I'm using two distinct ones for the UI/logic.
+        };
+        const PERMISSION_KEYS = Object.keys(AVAILABLE_PERMISSIONS);
+
+        // --- State Variables ---
+        const teamState = {
+            pageNumber: 1,
+            pageSize: 10,
+            search: '',
+            totalPages: 1,
+            totalRecordCount: 0,
+        };
+        let allTeamMembers = []; // Cache to hold the current page's records for actions
+
+        // --- DOM Elements ---
+        const teamMembersBody = document.getElementById('team-members-body');
+        const teamLoadingOverlay = document.getElementById('team-loading-overlay');
+        const filterSearch = document.getElementById('filter-search');
+        const pageSizeSelect = document.getElementById('page-size-select');
+        const prevPageBtn = document.getElementById('prev-page-btn');
+        const nextPageBtn = document.getElementById('next-page-btn');
+        const pageNumberDisplay = document.getElementById('page-number-display');
+
+        // Pagination Summary elements
+        const paginationSummary = document.getElementById('pagination-summary');
+
+        // Modals
+        const addModal = document.getElementById('add-modal');
+        const updateModal = document.getElementById('update-modal');
+        const addMemberForm = document.getElementById('add-member-form');
+        const updatePermissionsForm = document.getElementById('update-permissions-form');
+        const addPermissionsList = document.getElementById('add-permissions-list');
+        const updatePermissionsList = document.getElementById('update-permissions-list');
+        const updateMemberNameSpan = document.getElementById('update-member-name');
+        const updateMemberIdInput = document.getElementById('update-member-id');
+        const addMemberSubmitBtn = document.getElementById('add-member-submit-btn');
+        const addLoadingStatus = document.getElementById('add-loading-status');
+        const updatePermissionsSubmitBtn = document.getElementById('update-permissions-submit-btn');
+        const updateLoadingStatus = document.getElementById('update-loading-status');
+
+
+        // --- Utility Functions ---
+
+        function logout() {
+            localStorage.removeItem('nyscadminjwt');
+            localStorage.removeItem('nyscadminexpiresTime');
+            localStorage.removeItem('nyscadminId');
+            localStorage.removeItem('nyscadminEmail');
+            // Assuming the login page is in /Excoportal/auth/login.html from previous context
+            window.location.href = "/Excoportal/auth/login.html";
+        }
+
+        function getValidToken() {
+            const token = localStorage.getItem('nyscadminjwt');
+            const expiryTimeStr = localStorage.getItem('nyscadminexpiresTime');
+
+            if (token && expiryTimeStr) {
+                const expiryTime = new Date(expiryTimeStr).getTime();
+                const currentTime = new Date().getTime();
+
+                if (currentTime < expiryTime) {
+                    return token;
+                }
+            }
+            console.log("Authentication token invalid or expired. Redirecting to login.");
+            logout();
+            return null;
+        }
+
+        function showToast(message, type) {
+            const isSuccess = type === 'success';
+            const bgColor = isSuccess ? 'bg-green-500' : 'bg-red-500';
+            const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-exclamation';
+            const toastContainer = document.getElementById('toast-container');
+
+            toastContainer.innerHTML = `
+                <div id="active-toast" class="flex items-center p-4 rounded-lg shadow-xl text-white ${bgColor}">
+                    <i class="fa-solid ${icon} mr-3 text-lg"></i>
+                    <span class="text-sm font-medium">${message}</span>
+                </div>
+            `;
+
+            toastContainer.classList.remove('translate-x-full');
+
+            setTimeout(() => {
+                toastContainer.classList.add('translate-x-full');
+
+                setTimeout(() => {
+                    toastContainer.innerHTML = '';
+                }, 300);
+            }, TOAST_DURATION);
+        }
+
+        /**
+         * Converts a list of permission strings into HTML tags.
+         * @param {string[]} permissions Array of permission keys.
+         * @returns {string} HTML string of permission tags.
+         */
+        function renderPermissionsTags(permissions) {
+            if (!permissions || permissions.length === 0) {
+                return '<span class="text-gray-400 italic text-xs">No privileges assigned (View-only)</span>';
+            }
+            return permissions.map(key => {
+                const label = AVAILABLE_PERMISSIONS[key] || key;
+                return `<span class="permission-tag">${label}</span>`;
+            }).join('');
+        }
+
+        // --- Paging & Filtering Logic ---
+
+        function setPageSize(size) {
+            teamState.pageSize = parseInt(size, 10);
+            fetchTeamMembers(1);
+        }
+
+        function goToPage(page) {
+            if (page >= 1 && page <= teamState.totalPages) {
+                fetchTeamMembers(page);
+            }
+        }
+
+        function updatePaginationUI() {
+            const { pageNumber, totalPages, totalRecordCount, pageSize } = teamState;
+
+            // Pagination Buttons
+            prevPageBtn.disabled = pageNumber === 1 || totalRecordCount === 0;
+            nextPageBtn.disabled = pageNumber === totalPages || totalRecordCount === 0;
+
+            // Page Number Display
+            pageNumberDisplay.textContent = `Page ${pageNumber} of ${totalPages}`;
+
+            // Summary
+            const start = totalRecordCount === 0 ? 0 : (pageNumber - 1) * pageSize + 1;
+            const end = Math.min(pageNumber * pageSize, totalRecordCount);
+            paginationSummary.innerHTML = `Showing ${start} to ${end} of ${totalRecordCount} records`;
+        }
+
+        // --- Core Data Fetching & Rendering ---
+
+        function getTeamQueryParams(page) {
+            const params = new URLSearchParams();
+            params.set('pageNumber', page.toString());
+            params.set('pageSize', teamState.pageSize.toString());
+            if (filterSearch.value.trim()) {
+                params.set('search', filterSearch.value.trim());
+            }
+            return params;
+        }
+
+        async function fetchTeamMembers(page) {
+            const token = getValidToken();
+            if (!token) return;
+
+            teamLoadingOverlay.classList.remove('hidden');
+            teamMembersBody.innerHTML = '';
+            allTeamMembers = [];
+
+            try {
+                const params = getTeamQueryParams(page);
+                const fetchUrl = `${TEAMS_ENDPOINT}?${params.toString()}`;
+
+                const response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+
+                if (result.status === true && result.value) {
+                    const data = result.value;
+
+                    // Update state
+                    teamState.pageNumber = data.currentPage || 1;
+                    teamState.totalPages = data.totalPages || 1;
+                    teamState.totalRecordCount = data.totalRecordCount || 0;
+                    allTeamMembers = data.records || []; // Cache records
+
+                    renderTeamTable(allTeamMembers);
+                    updatePaginationUI();
+                } else {
+                    teamState.totalRecordCount = 0;
+                    renderTeamTable([]);
+                    updatePaginationUI();
+                    showToast(result.message || "Failed to fetch team members.", 'error');
+                }
+            } catch (error) {
+                console.error("Error fetching team members:", error);
+                teamState.totalRecordCount = 0;
+                renderTeamTable([]);
+                updatePaginationUI();
+                showToast("An unexpected error occurred while fetching records.", 'error');
+            } finally {
+                teamLoadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function renderTeamTable(records) {
+            teamMembersBody.innerHTML = '';
+
+            if (records.length === 0) {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b';
+                row.innerHTML = `<td colspan="5" class="px-6 py-4 text-center text-gray-500 font-medium">No team members found.</td>`;
+                teamMembersBody.appendChild(row);
+                return;
+            }
+
+            records.forEach(member => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-gray-50';
+
+                const fullName = `${member.firstName || ''} ${member.middleName ? member.middleName + ' ' : ''}${member.lastName || ''}`;
+                const permissionsHtml = renderPermissionsTags(member.permissions);
+
+                row.innerHTML = `
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        ${fullName.trim() || 'N/A'}
+                    </th>
+                    <td class="px-6 py-4">${member.email || 'N/A'}</td>
+                    <td class="px-6 py-4 font-semibold text-blue-700">${member.userType === 1 ? 'Admin' : 'General User'}</td>
+                    <td class="px-6 py-4">${permissionsHtml}</td>
+                    <td class="px-6 py-4 whitespace-nowrap space-x-2">
+                        <button onclick="openUpdateModal(${member.id})" title="Update Permissions"
+                            class="text-indigo-600 hover:text-indigo-800 transition p-1 rounded-full hover:bg-indigo-50">
+                            <i class="fa-solid fa-user-pen"></i>
+                        </button>
+                        <button onclick="confirmDeleteMember(${member.id}, '${fullName.trim()}')" title="Remove Member"
+                            class="text-red-600 hover:text-red-800 transition p-1 rounded-full hover:bg-red-50">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                teamMembersBody.appendChild(row);
+            });
+        }
+
+
+        // --- Add Member Modal Logic ---
+
+        function populateAddPermissions() {
+            addPermissionsList.innerHTML = '';
+            PERMISSION_KEYS.forEach(key => {
+                const label = AVAILABLE_PERMISSIONS[key];
+                const id = `add-${key}`;
+                addPermissionsList.innerHTML += `
+                    <div class="flex items-center">
+                        <input id="${id}" type="checkbox" name="permission" value="${key}"
+                            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="${id}" class="ml-2 text-sm text-gray-700">${label}</label>
+                    </div>
+                `;
+            });
+        }
+
+        function openAddModal() {
+            addMemberForm.reset();
+            populateAddPermissions();
+            addModal.classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            addModal.classList.add('hidden');
+        }
+
+        addMemberForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            addMemberSubmitBtn.disabled = true;
+            addLoadingStatus.classList.remove('hidden');
+
+            const token = getValidToken();
+            if (!token) {
+                addMemberSubmitBtn.disabled = false;
+                addLoadingStatus.classList.add('hidden');
+                return;
+            }
+
+            const selectedPermissions = Array.from(addPermissionsList.querySelectorAll('input:checked'))
+                .map(input => input.value);
+
+            const payload = {
+                email: document.getElementById('add-email').value.trim(),
+                firstName: document.getElementById('add-first-name').value.trim(),
+                lastName: document.getElementById('add-last-name').value.trim(),
+                // Middle name is optional and not explicitly in the API but good practice to capture it if needed by the backend
+                // For now, we omit it from the required API payload
+                permissions: selectedPermissions
+            };
+
+            try {
+                const response = await fetch(TEAMS_ENDPOINT, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === true) {
+                    showToast("New member added successfully!", 'success');
+                    closeAddModal();
+                    fetchTeamMembers(teamState.pageNumber); // Refresh current page
+                } else {
+                    const errorMsg = result.message || "Failed to add member. Check the email and try again.";
+                    showToast(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error("Error adding member:", error);
+                showToast("An unexpected network error occurred.", 'error');
+            } finally {
+                addMemberSubmitBtn.disabled = false;
+                addLoadingStatus.classList.add('hidden');
+            }
+        });
+
+
+        // --- Update Member Modal Logic ---
+
+        function openUpdateModal(memberId) {
+            const member = allTeamMembers.find(m => m.id === memberId);
+            if (!member) {
+                showToast("Error: Member data not found.", 'error');
+                return;
+            }
+
+            updateMemberIdInput.value = memberId;
+            updateMemberNameSpan.textContent = `${member.firstName} ${member.lastName}`;
+            updatePermissionsList.innerHTML = '';
+            updatePermissionsForm.reset(); // Reset form state before populating
+
+            // Populate checkboxes based on current permissions
+            PERMISSION_KEYS.forEach(key => {
+                const label = AVAILABLE_PERMISSIONS[key];
+                const id = `update-${key}`;
+                const isChecked = member.permissions.includes(key);
+
+                updatePermissionsList.innerHTML += `
+                    <div class="flex items-center">
+                        <input id="${id}" type="checkbox" name="permission" value="${key}" ${isChecked ? 'checked' : ''}
+                            class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="${id}" class="ml-2 text-sm text-gray-700">${label}</label>
+                    </div>
+                `;
+            });
+
+            updateModal.classList.remove('hidden');
+        }
+
+        function closeUpdateModal() {
+            updateModal.classList.add('hidden');
+        }
+
+        updatePermissionsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            updatePermissionsSubmitBtn.disabled = true;
+            updateLoadingStatus.classList.remove('hidden');
+
+            const token = getValidToken();
+            if (!token) {
+                updatePermissionsSubmitBtn.disabled = false;
+                updateLoadingStatus.classList.add('hidden');
+                return;
+            }
+
+            const memberId = updateMemberIdInput.value;
+            const currentMember = allTeamMembers.find(m => m.id == memberId);
+            if (!currentMember) {
+                 showToast("Error: Cannot find user for update.", 'error');
+                 updatePermissionsSubmitBtn.disabled = false;
+                 updateLoadingStatus.classList.add('hidden');
+                 return;
+            }
+            const currentPermissions = currentMember.permissions || [];
+
+            const formInputs = Array.from(updatePermissionsList.querySelectorAll('input[type="checkbox"]'));
+
+            const checkedPermissions = formInputs.filter(input => input.checked).map(input => input.value);
+
+            // Determine permissions to assign: checked in form AND not currently assigned
+            const permissionsToAssign = checkedPermissions.filter(key => !currentPermissions.includes(key));
+
+            // Determine permissions to unassign: currently assigned AND not checked in form
+            // This handles the case where all boxes are unchecked, correctly putting all current permissions in the unassign list.
+            const permissionsToUnassign = currentPermissions.filter(key => !checkedPermissions.includes(key));
+
+
+            const payload = {
+                assignPermissions: permissionsToAssign,
+                unassignPermissions: permissionsToUnassign
+            };
+
+            // Only send request if there are changes
+            if (permissionsToAssign.length === 0 && permissionsToUnassign.length === 0) {
+                showToast("No changes detected in permissions.", 'info');
+                closeUpdateModal();
+                updatePermissionsSubmitBtn.disabled = false;
+                updateLoadingStatus.classList.add('hidden');
+                return;
+            }
+
+
+            const fetchUrl = `${TEAMS_ENDPOINT}/${memberId}`;
+
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === true) {
+                    showToast("Permissions updated successfully!", 'success');
+                    closeUpdateModal();
+                    fetchTeamMembers(teamState.pageNumber); // Refresh current page
+                } else {
+                    const errorMsg = result.message || "Failed to update permissions.";
+                    showToast(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error("Error updating permissions:", error);
+                showToast("An unexpected network error occurred.", 'error');
+            } finally {
+                updatePermissionsSubmitBtn.disabled = false;
+                updateLoadingStatus.classList.add('hidden');
+            }
+        });
+
+
+        // --- Delete Member Logic ---
+
+        function confirmDeleteMember(memberId, memberName) {
+            // Use a custom modal for confirmation instead of window.confirm
+            const confirmAction = () => {
+                deleteMember(memberId);
+                closeCustomConfirmation();
+            };
+
+            const cancelAction = () => {
+                closeCustomConfirmation();
+            };
+
+            // Simple custom confirmation box setup (as window.confirm is forbidden)
+            const confirmationBox = document.createElement('div');
+            confirmationBox.id = 'custom-confirm-box';
+            confirmationBox.className = 'fixed inset-0 z-[60] bg-black bg-opacity-60 flex items-center justify-center p-4';
+            confirmationBox.innerHTML = `
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+                    <i class="fa-solid fa-triangle-exclamation text-4xl text-yellow-500 mb-4"></i>
+                    <h4 class="text-lg font-bold text-gray-800 mb-2">Confirm Removal</h4>
+                    <p class="text-sm text-gray-600 mb-6">Are you sure you want to remove <strong>${memberName}</strong> from the team?</p>
+                    <div class="flex justify-center space-x-3">
+                        <button id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition">Remove</button>
+                        <button id="cancel-delete-btn" class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg hover:bg-gray-400 transition">Cancel</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmationBox);
+
+            document.getElementById('confirm-delete-btn').onclick = confirmAction;
+            document.getElementById('cancel-delete-btn').onclick = cancelAction;
+
+            const closeCustomConfirmation = () => {
+                confirmationBox.remove();
+            };
+        }
+
+
+        async function deleteMember(memberId) {
+            const token = getValidToken();
+            if (!token) return;
+
+            const fetchUrl = `${TEAMS_ENDPOINT}/${memberId}`;
+
+            try {
+                // Show loading state temporarily
+                teamLoadingOverlay.classList.remove('hidden');
+
+                const response = await fetch(fetchUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+
+                if (response.ok) {
+                    showToast("Team member successfully removed.", 'success');
+                    fetchTeamMembers(teamState.pageNumber); // Refresh current page
+                } else {
+                    const errorMsg = "Failed to remove member.";
+                    try {
+                         const result = await response.json();
+                         showToast(result.message || errorMsg, 'error');
+                    } catch {
+                         showToast(errorMsg + ` (Status: ${response.status})`, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error("Error deleting member:", error);
+                showToast("An unexpected network error occurred during deletion.", 'error');
+            } finally {
+                 // Loading state will be hidden by fetchTeamMembers or here if it failed before that
+                 if (!teamLoadingOverlay.classList.contains('hidden')) {
+                     teamLoadingOverlay.classList.add('hidden');
+                 }
+            }
+        }
+
+
+        // --- Initialization ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up search debounce
+            let searchTimeout = null;
+            filterSearch.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    fetchTeamMembers(1); // Reset to page 1 on search
+                }, 500); // 500ms debounce
+            });
+
+            // Initial fetch
+            if (getValidToken()) {
+                fetchTeamMembers(teamState.pageNumber);
+            }
+        });
+    </script>
+</body>
+
+</html>
