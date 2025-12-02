@@ -128,12 +128,20 @@
             <h2 id="lga-name-header" class="text-2xl sm:text-3xl font-bold text-gray-800">
                 LGA Attendance Point Details
             </h2>
-            <!-- Edit Button to trigger Update Modal -->
-            <button id="edit-lga-btn" onclick="openUpdateModal()"
-                class="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
-                disabled>
-                <i class="fa-solid fa-pen-to-square mr-2"></i> Edit Point
-            </button>
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+                <!-- NEW: Record Attendance Button -->
+                <button id="record-attendance-btn" onclick="openReserveAttendanceModal()"
+                    class="w-full sm:w-auto bg-red-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+                    disabled>
+                    <i class="fa-solid fa-user-plus mr-2"></i> Record Attendance
+                </button>
+                <!-- Edit Button to trigger Update Modal -->
+                <button id="edit-lga-btn" onclick="openUpdateModal()"
+                    class="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                    disabled>
+                    <i class="fa-solid fa-pen-to-square mr-2"></i> Edit Point
+                </button>
+            </div>
         </div>
         <p class="mb-8 text-gray-500 text-sm">Review location details and attendance records.</p>
 
@@ -364,6 +372,97 @@
 
         </div>
     </main>
+    
+    <!-- Record Attendance Modal (NEW) -->
+    <div id="record-attendance-modal"
+        class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <!-- MODAL CONTENT: max-w-lg for desktop -->
+        <div
+            class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto transform transition-all">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b">
+                <h3 class="text-xl sm:text-2xl font-bold text-red-600">Record Manual Attendance</h3>
+                <button onclick="closeReserveAttendanceModal()" class="text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6">
+                <p class="text-sm text-gray-600 mb-6">Use this form to manually record attendance for a Corps Member.
+                    The location will default to the official LGA point.</p>
+                <form id="record-attendance-form" class="space-y-4">
+                    <!-- Name Fields (Responsive Grid) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label for="record-first-name" class="block text-xs font-medium text-gray-700 mb-1">First Name (Required)</label>
+                            <input type="text" id="record-first-name" required
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-600 focus:border-red-600 text-sm">
+                        </div>
+                        <div>
+                            <label for="record-last-name" class="block text-xs font-medium text-gray-700 mb-1">Last Name (Required)</label>
+                            <input type="text" id="record-last-name" required
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-600 focus:border-red-600 text-sm">
+                        </div>
+                        <div>
+                            <label for="record-middle-name" class="block text-xs font-medium text-gray-700 mb-1">Middle Name (Optional)</label>
+                            <input type="text" id="record-middle-name"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-600 focus:border-red-600 text-sm">
+                        </div>
+                    </div>
+
+                    <!-- State Code -->
+                    <div>
+                        <label for="record-state-code" class="block text-xs font-medium text-gray-700 mb-1">State Code (Required)</label>
+                        <input type="text" id="record-state-code" required maxlength="12" placeholder="e.g., AB/23C/0001"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-600 focus:border-red-600 text-sm uppercase">
+                    </div>
+
+                    <!-- Batch / CDS (Responsive Grid) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="record-batch" class="block text-xs font-medium text-gray-700 mb-1">Batch (Required)</label>
+                            <select id="record-batch" required
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-600 focus:border-red-600 text-sm"></select>
+                        </div>
+                        <div>
+                            <label for="record-cds" class="block text-xs font-medium text-gray-700 mb-1">CDS Group (Required)</label>
+                            <select id="record-cds" required
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-600 focus:border-red-600 text-sm"></select>
+                        </div>
+                    </div>
+
+                    <!-- Location Details (Hidden/Disabled, for API payload) -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="record-latitude" class="block text-xs font-medium text-gray-700 mb-1">Latitude (LGA Point)</label>
+                            <input type="text" id="record-latitude" disabled
+                                class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-sm">
+                        </div>
+                        <div>
+                            <label for="record-longitude" class="block text-xs font-medium text-gray-700 mb-1">Longitude (LGA Point)</label>
+                            <input type="text" id="record-longitude" disabled
+                                class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed text-sm">
+                        </div>
+                    </div>
+
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="record-attendance-submit-btn"
+                        class="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center">
+                        <i class="fa-solid fa-clipboard-check mr-2"></i>
+                        <span>Submit Attendance</span>
+                    </button>
+                </form>
+
+                <div id="record-loading-status" class="text-center mt-4 hidden">
+                    <i class="fa-solid fa-spinner fa-spin text-red-600 text-xl"></i>
+                    <p class="text-sm text-gray-500 mt-2">Recording attendance...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Record Attendance Modal -->
 
     <!-- Update Modal (Hidden by default) -->
     <div id="update-modal"
@@ -467,6 +566,40 @@
     </div>
     <!-- End Update Modal -->
 
+    <!-- NEW: Success Modal for Attendance Recording -->
+    <div id="success-modal"
+        class="fixed inset-0 z-50 hidden bg-black bg-opacity-50 flex items-center justify-center p-4"
+        onclick="closeSuccessModal()">
+        <!-- MODAL CONTENT: max-w-sm for desktop, prevent closing when clicking inside content -->
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm transform transition-all"
+            onclick="event.stopPropagation()">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-4 border-b bg-green-50 rounded-t-xl">
+                <h3 class="text-xl font-bold text-green-700 flex items-center">
+                    <i class="fa-solid fa-check-circle mr-2"></i> Attendance Success
+                </h3>
+                <button onclick="closeSuccessModal()" class="text-gray-400 hover:text-gray-700">
+                    <i class="fa-solid fa-xmark text-2xl"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 text-center">
+                <div class="mb-4">
+                    <i class="fa-solid fa-clipboard-check text-5xl text-green-500"></i>
+                </div>
+                <p id="success-message" class="text-lg font-semibold text-gray-800 mb-4">
+                    The attendance has been recorded successfully.
+                </p>
+                <button onclick="closeSuccessModal()"
+                    class="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- END Success Modal -->
+
     <!-- Toast Notification Container (Top Right) -->
     <div id="toast-container"
         class="max-w-xs w-full fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300">
@@ -483,6 +616,8 @@
         const LGA_ENDPOINT = `${BASE_URL}/api/Admin/LGA`;
         const ATTENDANCE_ENDPOINT_BASE = `${LGA_ENDPOINT}/`; // LGA/{id}/Attendance
         const EXPORT_ENDPOINT_BASE = `${LGA_ENDPOINT}/`; // LGA/{id}/Export
+        // NEW: Reserve Attendance Endpoint
+        const RESERVE_ATTENDANCE_ENDPOINT_BASE = `${LGA_ENDPOINT}/`; // LGA/{id}/Reserves
         const TOAST_DURATION = 3000;
 
         // Enum Definitions
@@ -494,6 +629,21 @@
             B2: { value: 4, label: 'Batch B Stream 2' },
             C1: { value: 5, label: 'Batch C Stream 1' },
             C2: { value: 6, label: 'Batch C Stream 2' }
+        };
+        
+        // NEW: CDS Enum Definition
+        const CDS_ENUM = {
+            SpecialCDS: { value: 1, label: 'Special CDS' },
+            Editorial: { value: 2, label: 'Editorial and Publicity CDS' },
+            Environmental: { value: 3, label: 'Environmental Protection and Sanitation CDS' },
+            Charity: { value: 4, label: 'Charity and Social Welfare CDS' },
+            Education: { value: 5, label: 'Education Development CDS' },
+            Culture: { value: 6, label: 'Cultural and Tourism CDS' },
+            ICT: { value: 7, label: 'ICT and Digital Literacy CDS' },
+            CommunityDevelopment: { value: 8, label: 'Community Development and Special Projects CDS' },
+            Agriculture: { value: 9, label: 'Agriculture and Agro-Allied CDS' },
+            ReproductiveHealth: { value: 10, label: 'Reproductive Health and Family Planning CDS' },
+            Others: { value: 11, label: 'Others' }
         };
 
         // --- State Variables ---
@@ -521,6 +671,9 @@
         // --- DOM Elements ---
         const lgaNameHeader = document.getElementById('lga-name-header');
         const editLgaBtn = document.getElementById('edit-lga-btn');
+        // NEW
+        const recordAttendanceBtn = document.getElementById('record-attendance-btn'); 
+        // END NEW
         const loadingState = document.getElementById('loading-state');
         const errorState = document.getElementById('error-state');
         const errorMessage = document.getElementById('error-message');
@@ -568,6 +721,24 @@
         const updateLgaForm = document.getElementById('update-lga-form');
         const updateLgaSubmitBtn = document.getElementById('update-lga-submit-btn');
         const updateLoadingStatus = document.getElementById('update-loading-status');
+        
+        // NEW: Reserve Attendance Modal DOM Elements
+        const recordAttendanceModal = document.getElementById('record-attendance-modal');
+        const recordAttendanceForm = document.getElementById('record-attendance-form');
+        const recordFirstNameInput = document.getElementById('record-first-name');
+        const recordLastNameInput = document.getElementById('record-last-name');
+        const recordMiddleNameInput = document.getElementById('record-middle-name');
+        const recordStateCodeInput = document.getElementById('record-state-code');
+        const recordBatchSelect = document.getElementById('record-batch');
+        const recordCdsSelect = document.getElementById('record-cds');
+        const recordLatitudeInput = document.getElementById('record-latitude');
+        const recordLongitudeInput = document.getElementById('record-longitude');
+        const recordAttendanceSubmitBtn = document.getElementById('record-attendance-submit-btn');
+        const recordLoadingStatus = document.getElementById('record-loading-status');
+        
+        // NEW: Success Modal DOM Elements
+        const successModal = document.getElementById('success-modal');
+        const successMessage = document.getElementById('success-message');
 
 
         // --- Utility Functions ---
@@ -623,6 +794,23 @@
                     toastContainer.innerHTML = '';
                 }, 300);
             }, TOAST_DURATION);
+        }
+
+        // NEW: Success Modal Functions
+        /**
+         * Shows the success modal with a custom message.
+         * @param {string} message The message to display.
+         */
+        function showSuccessModal(message) {
+            successMessage.textContent = message;
+            successModal.classList.remove('hidden');
+        }
+
+        /**
+         * Closes the success modal.
+         */
+        function closeSuccessModal() {
+            successModal.classList.add('hidden');
         }
 
         function copyToClipboard(text) {
@@ -751,9 +939,8 @@
         // --- Attendance Filter Initialization ---
 
         function populateEnums() {
-            // Populate Batch filter
+            // Populate Batch filter (Main Attendance Table Filter)
             filterBatch.innerHTML = '<option value="">All Batches</option>';
-            // Skip NOTGIVEN (value 0) in the display list, as it's the "All" default
             Object.values(BATCH_ENUM).filter(b => b.value !== 0).forEach(batch => {
                 const option = document.createElement('option');
                 option.value = batch.value;
@@ -761,10 +948,28 @@
                 filterBatch.appendChild(option);
             });
 
-            // Populate CDS filter - Now expecting string values from the API for filtering,
-            // so we only initialize the 'All' option here. The actual list of unique CDS strings
-            // would need to be fetched separately if we wanted a complete filter dropdown.
+            // Populate CDS filter (Main Attendance Table Filter)
+            // Since CDS in the table is a string, we only add the "All" option here.
             filterCds.innerHTML = '<option value="">All CDS Groups</option>';
+
+            // NEW: Populate Batch filter (Record Attendance Modal)
+            recordBatchSelect.innerHTML = '<option value="" disabled selected>Select Batch</option>';
+            Object.values(BATCH_ENUM).filter(b => b.value !== 0).forEach(batch => {
+                const option = document.createElement('option');
+                option.value = batch.value;
+                option.textContent = batch.label;
+                recordBatchSelect.appendChild(option);
+            });
+            
+            // NEW: Populate CDS filter (Record Attendance Modal)
+            recordCdsSelect.innerHTML = '<option value="" disabled selected>Select CDS Group</option>';
+            Object.values(CDS_ENUM).forEach(cds => {
+                const option = document.createElement('option');
+                option.value = cds.value;
+                option.textContent = cds.label;
+                recordCdsSelect.appendChild(option);
+            });
+
 
             // Attach event listeners to filters for automatic refresh
             [filterFrom, filterTo, filterBatch, filterCds, filterDay].forEach(el => {
@@ -1139,6 +1344,7 @@
             copyTokenBtn.disabled = false;
             copyTokenBtn.onclick = () => copyToClipboard(tokenUrl);
             editLgaBtn.disabled = false; // Enable the edit button
+            recordAttendanceBtn.disabled = false; // Enable the new record button
 
             [detailName, detailLat, detailLng, detailOpens, detailCloses, detailDistance, detailTokenUrl].forEach(el => {
                 el.classList.remove('skeleton', 'w-1/2', 'w-1/3', 'w-1/4', 'h-5');
@@ -1249,6 +1455,118 @@
             } finally {
                 updateLgaSubmitBtn.disabled = false;
                 updateLoadingStatus.classList.add('hidden');
+            }
+        });
+        
+        // --- Reserve Attendance Modal Functions ---
+
+        function openReserveAttendanceModal() {
+            if (!lgaData) {
+                showToast("LGA data not loaded. Please try again.", 'error');
+                return;
+            }
+
+            // Reset form fields and status
+            recordAttendanceForm.reset();
+            recordAttendanceSubmitBtn.disabled = false;
+            recordLoadingStatus.classList.add('hidden');
+
+            // Populate static location fields with current LGA data
+            recordLatitudeInput.value = parseFloat(lgaData.latitude).toFixed(6);
+            recordLongitudeInput.value = parseFloat(lgaData.longitude).toFixed(6);
+            
+            // Set State Code to always be uppercase
+            recordStateCodeInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase();
+            });
+
+            recordAttendanceModal.classList.remove('hidden');
+        }
+
+        function closeReserveAttendanceModal() {
+            recordAttendanceModal.classList.add('hidden');
+        }
+        
+        // Handle Reserve Attendance form submission
+        recordAttendanceForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            recordAttendanceSubmitBtn.disabled = true;
+            recordLoadingStatus.classList.remove('hidden');
+
+            const token = getValidToken();
+            if (!token) {
+                recordAttendanceSubmitBtn.disabled = false;
+                recordLoadingStatus.classList.add('hidden');
+                return;
+            }
+
+            const firstName = recordFirstNameInput.value.trim();
+            const payload = {
+                firstName: firstName,
+                lastName: recordLastNameInput.value.trim(),
+                middleName: recordMiddleNameInput.value.trim() || null,
+                stateCode: recordStateCodeInput.value.trim().toUpperCase(),
+                batch: parseInt(recordBatchSelect.value, 10),
+                cds: parseInt(recordCdsSelect.value, 10),
+                latitude: parseFloat(recordLatitudeInput.value),
+                longitude: parseFloat(recordLongitudeInput.value)
+            };
+
+            
+            // Ensure batch and cds are valid numbers before submission
+            if (isNaN(payload.batch) || isNaN(payload.cds)) {
+                showToast("Please select valid Batch and CDS Group.", 'error');
+                recordAttendanceSubmitBtn.disabled = false;
+                recordLoadingStatus.classList.add('hidden');
+                return;
+            }
+
+
+            const fetchUrl = `${RESERVE_ATTENDANCE_ENDPOINT_BASE}${lgaId}/Reserves`;
+
+            try {
+                const response = await fetch(fetchUrl, {
+                    method: 'POST', // Use POST for new record creation
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 401) {
+                    showToast("Session expired. Please log in again.", 'error');
+                    return logout();
+                }
+                console.log(payload)
+
+                const result = await response.json();
+
+                if (response.ok && result.status === true) {
+                    const serialNumber = result.value?.serialNumber;
+                    
+                    if (serialNumber) {
+                        // Display success modal with dynamic message
+                        showSuccessModal(`The attendance for ${firstName} has been recorded with the serial number ${serialNumber}.`);
+                    } else {
+                        // Fallback if serial number is missing
+                        showToast("Attendance recorded successfully, but serial number is missing.", 'success');
+                    }
+                    
+                    closeReserveAttendanceModal();
+                    // Re-fetch attendance records to show the newly added entry (should appear on page 1)
+                    fetchAttendanceRecords(1); 
+                } else {
+                    const errorMsg = result.message || "Failed to record attendance. Check State Code and try again.";
+                    showToast(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error("Error recording attendance data:", error);
+                showToast("An unexpected network error occurred while recording attendance.", 'error');
+            } finally {
+                recordAttendanceSubmitBtn.disabled = false;
+                recordLoadingStatus.classList.add('hidden');
             }
         });
 

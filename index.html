@@ -311,21 +311,30 @@
         <div id="step-success"
             class="hidden absolute inset-0 rounded-2xl success-bg flex flex-col items-center justify-center text-center p-6 z-50">
             <div class="success-overlay"></div>
-            <div class="success-content w-full">
-                <!-- Icon and Title Moved Up -->
-                <div
-                    class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/50">
-                    <i class="fa-solid fa-check text-3xl text-white"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-white drop-shadow-lg">Attendance Saved!</h2>
-                <p class="text-white/80 mt-1 font-medium text-sm">Your Serial Number is:</p>
-                <div id="serial-display" class="text-5xl font-semibold text-white mt-4 tracking-widest drop-shadow-xl"
-                    style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
-                    <!-- Serial Number Injected Here -->
+            <!-- success-content now uses h-full and flex to push the identifier to the bottom -->
+            <div class="success-content w-full h-full flex flex-col justify-between">
+                <!-- Top Content -->
+                <div class="flex flex-col items-center pt-8">
+                    <!-- Icon and Title Moved Up -->
+                    <div
+                        class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/50">
+                        <i class="fa-solid fa-check text-3xl text-white"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold text-white drop-shadow-lg">Attendance Saved!</h2>
+                    <p class="text-white/80 mt-1 font-medium text-sm">Your Serial Number is:</p>
+                    <div id="serial-display"
+                        class="text-5xl font-semibold text-white mt-4 tracking-widest drop-shadow-xl"
+                        style="text-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                        <!-- Serial Number Injected Here -->
+                    </div>
+                    <!-- New Time Display (Requirement 1) -->
+                    <p id="time-display" class="text-white/80 text-sm mt-1 mb-6 drop-shadow-lg font-medium">
+                        <!-- Time Injected Here -->
+                    </p>
                 </div>
 
-                <!-- Updated Identifier Display with Warning (Increased Transparency) -->
-                <div class="mt-6 bg-black/10 backdrop-blur-md rounded-xl p-3 border border-white/20 mx-2">
+                <!-- Bottom Content (Identifier Display - Pushed down and more transparent) -->
+                <div class="mb-0 bg-black/5 backdrop-blur-md rounded-xl p-3 border border-white/10 mx-2">
                     <!-- WARNING MESSAGE -->
                     <p class="text-red-300 text-xs font-semibold mb-2">
                         <i class="fa-solid fa-triangle-exclamation mr-1"></i> Don't forget to copy this as you would
@@ -334,8 +343,9 @@
 
                     <p class="text-[10px] text-white/70 uppercase tracking-widest mb-2">Attendance Identifier</p>
                     <div class="flex items-center justify-between bg-black/5 rounded-lg p-2 border border-white/10">
+                        <!-- Adjusted text color for more transparency -->
                         <code id="identifier-display"
-                            class="text-xs text-green-300 font-mono break-all truncate mr-2 select-all">
+                            class="text-xs text-green-400/70 font-mono break-all truncate mr-2 select-all">
                             <!-- UUID injected here -->
                         </code>
                         <button onclick="copyIdentifier()" class="text-white/70 hover:text-white transition p-1"
@@ -344,12 +354,7 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- Done button is now higher up due to container changes -->
-                <button onclick="resetDemo()"
-                    class="mt-6 px-6 py-2 bg-white/30 hover:bg-white/40 backdrop-blur-md rounded-full text-sm text-white border border-white/50 transition font-semibold">
-                    Done
-                </button>
+                <!-- Removed the 'Done' button as requested -->
             </div>
         </div>
 
@@ -396,6 +401,7 @@
         const SELFIE_KEY = 'nysc_selfie';
         const DATE_KEY = 'attendance_date';
         const SERIAL_KEY = 'attendance_serial';
+        const TIME_KEY = 'attendance_time'; // NEW: Key for recorded time
 
         // DOM Elements
         const mainCard = document.getElementById('main-card');
@@ -429,6 +435,14 @@
             // Format: YYYY-MM-DD
             return now.toISOString().split('T')[0];
         }
+
+        // NEW: Function to get the current time formatted as HH:MM:SS AM/PM
+        function getTodayTimeString() {
+            const now = new Date();
+            // Use toLocaleTimeString for locale-friendly time display (e.g., 9:05:30 AM)
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
 
         // Function for exponential backoff retry for network resilience
         async function fetchWithRetry(url, options, maxRetries = 3) {
@@ -510,6 +524,7 @@
 
         checkExistingAttendance();
 
+        // **Fulfills Requirement 2: Daily Local Storage Clearance**
         async function checkExistingAttendance() {
             const storedDate = localStorage.getItem(DATE_KEY);
             const todayDate = getTodayDateString();
@@ -522,8 +537,9 @@
                 localStorage.removeItem(SELFIE_KEY);
                 localStorage.removeItem(DATE_KEY);
                 localStorage.removeItem(SERIAL_KEY);
+                localStorage.removeItem(TIME_KEY); // Added clearance for TIME_KEY
                 storedIdPanel.classList.add('hidden');
-                console.log('Previous day attendance cleared.');
+                console.log('Previous day attendance cleared for new session.');
             } else if (storedIdentifier) {
                 // 2. If it is the same day and an identifier exists, show it.
                 storedIdDisplay.innerText = storedIdentifier;
@@ -573,12 +589,13 @@
             const storedDate = localStorage.getItem(DATE_KEY);
             const storedIdentifier = localStorage.getItem(IDENTIFIER_KEY);
             const storedSerial = localStorage.getItem(SERIAL_KEY);
+            const storedTime = localStorage.getItem(TIME_KEY); // Retrieve Time
             const todayDate = getTodayDateString();
 
             // Check for same-day attendance (Requirement 1)
             if (storedDate === todayDate && storedSerial && storedIdentifier) {
                 // Same day attendance found! Bypass process and show success.
-                showSuccess(storedSerial, storedIdentifier);
+                showSuccess(storedSerial, storedIdentifier, storedTime); // Pass Time
                 stepWelcome.classList.add('hidden'); // Hide welcome screen
                 return; // Stop the flow here
             }
@@ -603,7 +620,7 @@
             btnVerifyCheck.disabled = true;
 
             const url = `${BASE_URL}/api/CorpsMember/Attendance/${id}`;
-            
+
             fetch(url, {
                 method: 'GET'
             })
@@ -611,6 +628,7 @@
                 .then(data => {
                     console.log(data)
                     if (data.status === true) {
+                        // Note: When retrieving, we don't have the time, so we pass null/undefined for timeRecorded
                         showSuccess(data.value, id);
                         stepVerify.classList.add('hidden');
                     } else {
@@ -720,6 +738,7 @@
 
             // Generate 7-character identifier for this attendance attempt
             const generatedIdentifier = generateIdentifier();
+            const currentTimeString = getTodayTimeString(); // Capture Time
 
             const payload = {
                 identifier: generatedIdentifier,
@@ -753,8 +772,9 @@
                     localStorage.setItem(IDENTIFIER_KEY, generatedIdentifier);
                     localStorage.setItem(DATE_KEY, getTodayDateString()); // Save the current date
                     localStorage.setItem(SERIAL_KEY, data.value); // Save the serial number
+                    localStorage.setItem(TIME_KEY, currentTimeString); // Save the current time
 
-                    showSuccess(data.value, generatedIdentifier);
+                    showSuccess(data.value, generatedIdentifier, currentTimeString); // Pass Time
                 }
                 // Reset button state regardless of outcome
                 btnSubmit.innerText = originalText;
@@ -770,8 +790,8 @@
             })
         }
 
-        // --- Success Screen Logic (Unchanged) ---
-        function showSuccess(serialNumber, identifier = "N/A") {
+        // --- Success Screen Logic ---
+        function showSuccess(serialNumber, identifier = "N/A", timeRecorded = null) {
             appHeader.classList.add('hidden');
             stepForm.classList.add('hidden');
             stepSuccess.classList.remove('hidden');
@@ -780,6 +800,14 @@
             const displayEl = document.getElementById('serial-display');
             if (displayEl) {
                 displayEl.innerText = String(serialNumber).padStart(3, '0');
+            }
+
+            // Display recorded time
+            const timeDisplayEl = document.getElementById('time-display');
+            if (timeDisplayEl && timeRecorded) {
+                timeDisplayEl.innerText = `Recorded at: ${timeRecorded}`;
+            } else if (timeDisplayEl) {
+                timeDisplayEl.innerText = ''; // Clear if no time provided (e.g., when verifying an old ID)
             }
 
             const idDisplay = document.getElementById('identifier-display');
@@ -796,14 +824,7 @@
             }
         }
 
-        function resetDemo() {
-            // Clears Identifier and Selfie, but keeps the DATE_KEY and SERIAL_KEY
-            // to allow for re-previewing the success screen if needed later in the same day.
-            // For a complete fresh start (new day), the checkExistingAttendance handles the full wipe.
-            localStorage.removeItem(IDENTIFIER_KEY);
-            localStorage.removeItem(SELFIE_KEY);
-            location.reload();
-        }
+        // Removed the resetDemo function to prevent manual local storage clearing.
     </script>
 </body>
 
